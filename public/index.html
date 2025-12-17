@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDU 98.5 FM - Student Radio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Audio element (hidden but accessible) -->
+    <audio id="radio-stream" preload="none">
+        <source src="https://rdu985fm-gecko.radioca.st/stream" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <nav class="main-nav">
+        <div class="nav-container">
+            <!-- Logo Section -->
+            <img class="logo-section" src="logo.png"></img>
+
+            <!-- Play Button Section -->
+            <div class="player-section">
+                <button id="play-button" class="play-btn" aria-label="Play/Pause Radio">
+                    <svg class="play-icon" viewBox="0 0 24 24" width="64" height="64">
+                        <path d="M8 5v14l11-7z" fill="currentColor"/>
+                    </svg>
+                    <svg class="pause-icon" viewBox="0 0 24 24" width="64" height="64" style="display: none;">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <div class="now-playing">
+                    <span class="station-name">RDU 98.5 FM</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="nav-links">
+                <a href="#" data-route="home" class="nav-link active">Home</a>
+                <a href="#" data-route="show-schedule" class="nav-link">Schedule</a>
+                <a href="#" data-route="gig-guide" class="nav-link">Gig Guide</a>
+                <a href="#" data-route="podcasts" class="nav-link">Podcasts</a>
+                <a href="#" data-route="contact" class="nav-link">Contact</a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-nav-links">
+            <a href="#" data-route="home" class="mobile-nav-link">Home</a>
+            <a href="#" data-route="show-schedule" class="mobile-nav-link">Schedule</a>
+            <a href="#" data-route="gig-guide" class="mobile-nav-link">Gig Guide</a>
+            <a href="#" data-route="podcasts" class="mobile-nav-link">Podcasts</a>
+            <a href="#" data-route="contact" class="mobile-nav-link">Contact</a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+            	<img style="width:30%; height:auto; margin:auto;" class="logo-section" src="logo.png"></img>
+                <h3>RDU 98.5 FM</h3>
+                <ul>
+					<p><b>Email</b>: admin@rdu.org.nz
+					<p><b>Phone</b>: +64 3 741 3050
+					<p><b>Mail</b>: 270 Saint Asaph Street, Christchurch, 8011
+				</ul>
+            </div>
+            
+            
+            <div class="footer-section">
+            	<a href="https://www.nzonair.govt.nz/"><img style="width:40%; height:auto; margin:auto;" class="logo-section" src="nz-on-air.png"></img></a>
+                <p>Made with Support from <a style="color:#ddd; text-decoration: none;" href="https://www.nzonair.govt.nz/">New Zealand On Air</a>.</p>
+            </div>
+            
+            <div class="footer-section">
+            	<p>Terms & Conditions</p>
+            	<p>Copyright &copy; RDU98.5FM 2025. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
