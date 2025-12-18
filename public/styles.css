@@ -1,10 +1,10 @@
 /* CSS Variables - Radio Wave Theme */
 :root {
     --primary-color: #333333;
-    --secondary-color: #335588;
-    --dark-bg: #eeeeee;
-    --darker-bg: #ccccee;
-    --light-text: #666;
+    --secondary-color: #853;
+    --dark-bg: #eeeecc;
+    --darker-bg: #eecccc;
+    --light-text: #754;
     --muted-text: #A0A8C0;
     --accent-glow: rgba(255, 51, 102, 0.3);
     --success-color: #00FF88;
@@ -151,8 +151,28 @@ body {
 }
 
 .nav-link:hover,
-.nav-link.active {
-    color: var(--light-text);
+.nav-link.active  {
+    color: var(--primary-color);
+}
+[data-route="home"].nav-link:hover,
+[data-route="home"].nav-link.active  {
+    color: #e55;
+}
+[data-route="show-schedule"].nav-link:hover,
+[data-route="show-schedule"].nav-link.active  {
+    color: #e95;
+}
+[data-route="gig-guide"].nav-link:hover,
+[data-route="gig-guide"].nav-link.active  {
+    color: #ed5;
+}
+[data-route="podcasts"].nav-link:hover,
+[data-route="podcasts"].nav-link.active  {
+    color: #ae5;
+}
+[data-route="contact"].nav-link:hover,
+[data-route="contact"].nav-link.active  {
+    color: #4ea;
 }
 
 .nav-link:hover::after,
@@ -312,7 +332,7 @@ body {
 .hero {
     text-align: center;
     padding: 4rem 2rem;
-    background: linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(0, 217, 255, 0.1));
+    background: linear-gradient(135deg, rgba(255, 102, 51, 0.1), rgba(255, 255, 0, 0.1));
     border-radius: 8px;
     margin-bottom: 3rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -480,4 +500,95 @@ body {
     .card {
         padding: 1.5rem;
     }
+}
+
+
+#gig-div {
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Vertically centers items */
+    padding: 20px;
+    border: 1px solid #ddd; /* Optional: Add border for better visual */
+}
+
+#gig-info {
+	display: flex;
+	flex-direction: column; /* Stack the text vertically */
+	flex: 1; /* Makes sure it takes up available space */
+}
+
+#image-container {
+	display: flex;
+	flex-direction: column; /* Stack image and button vertically */
+	align-items: center; /* Centers the image and button */
+}
+
+#image-container img {
+	width: 100%; /* Make sure the image fits well in the container */
+	max-width: 70px; /* Adjust this value as needed */
+}
+
+#gig-div {
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0px;
+	border: 1px solid #ddd;
+	box-shadow: 2px 2px 5px #0009;
+	border-radius: 8px;
+	padding: 5px;
+	background-color: #f9f9f9;
+}
+
+#gig-image {
+	width: 100%;
+	height: auto;
+	border-radius: 4px;
+	display: block;
+}
+
+#gig-info {
+	display: inline-block;
+	width: calc(100% - 80px);
+}
+
+#event-title {
+	font-size: 1em;
+	font-weight: bold;
+	margin: 3px 0;
+}
+
+#event-date, #event-venue {
+	font-size: 1em;
+	color: #666;
+	margin: 5px 0;
+}
+
+#ticket-link {
+	display: block;             /* Make the <a> tag a block element */
+	width: 100%;   
+	position: absolute;
+	bottom: 0px;
+	left: 0;
+	background-color: #007BFF;
+	color: white;
+	padding: 10px 0;
+	text-decoration: none;
+	border-radius: 4px;
+	margin-top: 10px;
+	text-align: center;
+}
+
+#ticket-link:hover {
+	background-color: #0056b3;   /* Darker background on hover */
+}
+
+#image-container {
+	width: 70px;
+	height: 100%;
+	margin-right: 5px;
+	display: inline-block;
+	position: relative;
+	vertical-align: top;              /* Vertically align with sibling element */
+	line-height: 1;   
 }

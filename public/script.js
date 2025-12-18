@@ -15,11 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Audio player state
     let isPlaying = false;
     
-    // Load logo on page load
-    loadLogo();
-    
     // Load home page by default
-    loadPage('home');
+    var pathname = window.location.pathname.slice(1);
+    if (pathname) {
+	    loadPage(pathname);
+    } else {
+	    loadPage('home');
+    }
     
     // Set up play button
     if (playButton && radioStream) {
@@ -34,17 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up navigation links
     setupNavigationLinks();
     
-    // Function to load logo
-    function loadLogo() {
-        fetch('/logo.png')
-            .then(response => response.text())
-            .then(html => {
-                logoContainer.innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Error loading logo:', error);
-            });
-    }
     
     // Function to toggle audio playback
     function togglePlay() {
@@ -92,7 +83,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 const route = this.getAttribute('data-route');
                 loadPage(route);
-                updateActiveLink(this);
             });
         }
         
@@ -103,9 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const route = this.getAttribute('data-route');
                 loadPage(route);
                 closeMobileMenu();
-                
-                // Update desktop nav active state too
-                updateActiveLink(findNavLinkByRoute(route));
             });
         }
     }
@@ -134,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Function to load page content
-    function loadPage(route) {
+    function loadPage(route, dontPush) {
         // Show loading state
         mainContent.innerHTML = `
             <div class="loading">
@@ -162,6 +149,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Scroll to top
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Add history
+                    if (!dontPush) {
+	                    history.pushState({ page: route }, '', route);
+                    }
+                    
+                    // Reset now playing
+                    lastState = null;
+                    
+		            // Update desktop nav active state too
+		            updateActiveLink(findNavLinkByRoute(route));
                     
                     // Initialize any page-specific functionality
                     initializePageScripts();
@@ -206,10 +204,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Add any other page-specific initialization here
+        const gigGuide = document.getElementsByClassName('gig-guide-gigs');
+        if (gigGuide.length > 0) {
+        	popuateGigs();
+        }
     }
     
     // Poll for Now Playing change
-    let lastState = null;
+    var lastState = null;
 
 	async function checkState() {
 		try {
@@ -218,7 +220,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			if (JSON.stringify(data) !== JSON.stringify(lastState)) {
 				lastState = data;
-				document.getElementsByClassName('now-playing-song')[0].innerText = data; // update HTML
+				var nowPlaying = document.getElementsByClassName('now-playing-song')[0];
+				if (nowPlaying) {
+					nowPlaying.innerText = data; // update HTML
+				}
 			}
 		} catch (err) {
 			console.error('Error fetching state:', err);
@@ -227,13 +232,99 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Poll every 2 seconds
 	setInterval(checkState, 2000);
+	
+	
+	
+	// Gig Guide stuff COPY AND PASTED STRAIGHT FROM WEBFLOW
+  // Helper function to get the ordinal suffix
+  function popuateGigs() {
+  function getOrdinal(n) {
+    const suffix = ['th', 'st', 'nd', 'rd', 'th'][n % 10 <= 3 && ![11, 12, 13].includes(n % 100) ? n % 10 : 0];
+    return `${n}${suffix}`;
+  }
+
+  // Function to convert date to the desired format
+  function convertDate(startDate) {
+    const dateObj = new Date(startDate);  // Parse the start_date string into a Date object
+
+    // Get the weekday, day with ordinal, month, and time in 12-hour format with am/pm
+    const weekday = dateObj.toLocaleString('en', { weekday: 'short' });  // e.g., Tue, Wed
+    const dayWithOrdinal = getOrdinal(dateObj.getDate());
+    const month = dateObj.toLocaleString('en', { month: 'long' });  // e.g., July, August
+    let hours = dateObj.getHours();
+    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12 || 12;  // Convert 24-hour time to 12-hour format
+
+    const timeStr = `${hours}:${minutes}${ampm}`;
+
+    // Combine into the desired format
+    return `${weekday} ${dayWithOrdinal} ${month} ${timeStr}`.toUpperCase();
+  }
+
+  fetch("https://soundsgood.guide/wp-json/tribe/events/v1/events?tags=rdu")
+    .then(function(response) {
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return response.json();
+  })
+    .then(function(data) {
+
+    const container = document.getElementsByClassName("gig-guide-gigs")[0];
+
+    if (container) {
+      var content = "";
+      for (var i = 0; i < data.events.length; i++) {
+        var event = data.events[i];
+        var dateFormat = convertDate(event.start_date);
+        var venue = "";
+        if (event.venue.city && event.venue.venue) {
+          venue = event.venue.city + ", " + event.venue.venue;
+        } else if (event.venue.city) {
+          venue = event.venue.city;
+        } else if (event.venue.venue) {
+          venue = event.venue.venue;
+        }
+        var ticketsLink = "";
+        if (event.website) {
+          ticketsLink = `<a id="ticket-link" href="${event.website}">Tickets</a>`;
+        } else if (event.url) {
+          ticketsLink = `<a id="ticket-link" href="${event.url}">Tickets</a>`;
+        }
+        var image = "";
+        if (event.image.sizes.thumbnail.url) {
+          image = `<img id="gig-image" src="${event.image.sizes.thumbnail.url}">`;
+        }
+        content += `
+		<div id="gig-div">
+			<div id="image-container">
+				${ticketsLink}
+				${image}
+			</div>
+			<div id="gig-info">
+			  <p id="event-date">${dateFormat}</p>
+			  <p id="event-title">${event.title}</p>
+			  <p id="event-venue">${venue}</p>
+			</div>
+		</div>
+		`;
+      }
+      container.innerHTML = content;
+    }
+  });
+  }
+  // End Gig Guide
     
+    
+    var forwards
     
     // Handle browser back/forward buttons
     window.addEventListener('popstate', function(e) {
         // You could implement history state management here
         // For now, just reload the home page
-        loadPage('home');
+        console.log(e);
+        loadPage(e.state.page, true);
     });
     
     // Add fade transition to main content

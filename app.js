@@ -30,7 +30,7 @@ app.get('/api/gig-guide', serveRoute('gig-guide.html'));
 app.get('/api/podcasts', serveRoute('podcasts.html'));
 
 // Root route serves index.html NOTE this is done automatically in static
-app.get('/', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
