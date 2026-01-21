@@ -8,6 +8,9 @@ const PORT = process.env.PORT || 3000;
 // Serve static files from public directory
 app.use(express.static('public'));
 
+// Serve ad-rotation directory as static files
+app.use('/ad-rotation', express.static(path.join(__dirname, 'ad-rotation')));
+
 // Route handler function
 function serveRoute(routePath) {
   return (req, res) => {
