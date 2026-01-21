@@ -608,8 +608,7 @@ body {
     border-radius: 4px;
 }
 
-/* Coming Up Section */
-.coming-up-section {
+.centered-text {
     text-align: center;
 }
 
@@ -621,4 +620,14 @@ body {
     margin: 0.75rem 0;
     font-size: 1.1rem;
     color: var(--light-text);
+}
+
+.social-icons li{
+    display: inline-block;
+    font-size: 2em;
+    margin: 1px;
+}
+
+.social-link{
+    color: white;
 }
