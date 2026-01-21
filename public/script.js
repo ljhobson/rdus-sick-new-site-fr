@@ -2,7 +2,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const mainContent = document.getElementById('main-content');
-    const logoContainer = document.getElementById('logo-container');
     const playButton = document.getElementById('play-button');
     const radioStream = document.getElementById('radio-stream');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -43,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
             radioStream.pause();
             playButton.classList.remove('playing');
             isPlaying = false;
+            document.title = 'RDU 98.5 FM - Student Radio'
         } else {
             // Load and play the stream
             radioStream.load();
@@ -55,6 +55,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         playButton.classList.add('playing');
                 		playButton.classList.remove('loading-spinner');
                         isPlaying = true;
+
+                        nowPlayingElement = document.getElementsByClassName('now-playing-song')[0];
+                        document.title = nowPlayingElement ? nowPlayingElement.innerText : 'RDU 98.5 FM - Student Radio'
                     })
                     .catch(error => {
                         console.error('Error playing audio:', error);
@@ -223,6 +226,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				var nowPlaying = document.getElementsByClassName('now-playing-song')[0];
 				if (nowPlaying) {
 					nowPlaying.innerText = data; // update HTML
+                    if (isPlaying) {
+                        document.title = data // update Title 
+                    }
 				}
 			}
 		} catch (err) {
