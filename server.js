@@ -1,19 +1,27 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const https = require('https')
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
+
+const options = {
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.crt'),
+};
+
+const server = https.createServer(options, app)
 
 // Serve static files from public directory
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve ad-rotation directory as static files
 app.use('/ad-rotation', express.static(path.join(__dirname, 'ad-rotation')));
 
 // Route handler function
 function serveRoute(routePath) {
-  return (req, res) => {
+  return (_req, res) => {
     const filePath = path.join(__dirname, 'routes', routePath);
     fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) {
@@ -38,6 +46,6 @@ app.get('/*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Radio app running on http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`PWA server listening on port ${PORT}`);
 });

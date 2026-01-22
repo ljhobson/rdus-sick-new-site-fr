@@ -2,10 +2,10 @@
   "name": "rdu-radio-app",
   "version": "1.0.0",
   "description": "RDU 98.5 FM Radio Station Web Application - Single Page App with Live Streaming",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "node app.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "keywords": [
     "radio",
@@ -16,6 +16,9 @@
   "author": "RDU 98.5 FM",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.22.1",
+    "react": "^19.2.3",
+    "serviceworker-webpack-plugin": "^1.0.2",
+    "webpack": "^5.104.1"
   }
 }

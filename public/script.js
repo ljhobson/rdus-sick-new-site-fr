@@ -242,89 +242,86 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	
 	// Gig Guide stuff COPY AND PASTED STRAIGHT FROM WEBFLOW
-  // Helper function to get the ordinal suffix
-  function popuateGigs() {
-  function getOrdinal(n) {
-    const suffix = ['th', 'st', 'nd', 'rd', 'th'][n % 10 <= 3 && ![11, 12, 13].includes(n % 100) ? n % 10 : 0];
-    return `${n}${suffix}`;
-  }
+    // Helper function to get the ordinal suffix
+    function popuateGigs() {
+        function getOrdinal(n) {
+            const suffix = ['th', 'st', 'nd', 'rd', 'th'][n % 10 <= 3 && ![11, 12, 13].includes(n % 100) ? n % 10 : 0];
+            return `${n}${suffix}`;
+        }
 
-  // Function to convert date to the desired format
-  function convertDate(startDate) {
-    const dateObj = new Date(startDate);  // Parse the start_date string into a Date object
+        // Function to convert date to the desired format
+        function convertDate(startDate) {
+            const dateObj = new Date(startDate);  // Parse the start_date string into a Date object
 
-    // Get the weekday, day with ordinal, month, and time in 12-hour format with am/pm
-    const weekday = dateObj.toLocaleString('en', { weekday: 'short' });  // e.g., Tue, Wed
-    const dayWithOrdinal = getOrdinal(dateObj.getDate());
-    const month = dateObj.toLocaleString('en', { month: 'long' });  // e.g., July, August
-    let hours = dateObj.getHours();
-    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12 || 12;  // Convert 24-hour time to 12-hour format
+            // Get the weekday, day with ordinal, month, and time in 12-hour format with am/pm
+            const weekday = dateObj.toLocaleString('en', { weekday: 'short' });  // e.g., Tue, Wed
+            const dayWithOrdinal = getOrdinal(dateObj.getDate());
+            const month = dateObj.toLocaleString('en', { month: 'long' });  // e.g., July, August
+            let hours = dateObj.getHours();
+            const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'pm' : 'am';
+            hours = hours % 12 || 12;  // Convert 24-hour time to 12-hour format
 
-    const timeStr = `${hours}:${minutes}${ampm}`;
+            const timeStr = `${hours}:${minutes}${ampm}`;
 
-    // Combine into the desired format
-    return `${weekday} ${dayWithOrdinal} ${month} ${timeStr}`.toUpperCase();
-  }
+            // Combine into the desired format
+            return `${weekday} ${dayWithOrdinal} ${month} ${timeStr}`.toUpperCase();
+        }
 
-  fetch("https://soundsgood.guide/wp-json/tribe/events/v1/events?tags=rdu")
-    .then(function(response) {
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+        fetch("https://soundsgood.guide/wp-json/tribe/events/v1/events?tags=rdu")
+            .then(function(response) {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
+            .then(function(data) {
+
+                const container = document.getElementsByClassName("gig-guide-gigs")[0];
+
+                if (container) {
+                    var content = "";
+                    for (var i = 0; i < data.events.length; i++) {
+                        var event = data.events[i];
+                        var dateFormat = convertDate(event.start_date);
+                        var venue = "";
+                        if (event.venue.city && event.venue.venue) {
+                        venue = event.venue.city + ", " + event.venue.venue;
+                        } else if (event.venue.city) {
+                        venue = event.venue.city;
+                        } else if (event.venue.venue) {
+                        venue = event.venue.venue;
+                        }
+                        var ticketsLink = "";
+                        if (event.website) {
+                        ticketsLink = `<a id="ticket-link" href="${event.website}">Tickets</a>`;
+                        } else if (event.url) {
+                        ticketsLink = `<a id="ticket-link" href="${event.url}">Tickets</a>`;
+                        }
+                        var image = "";
+                        if (event.image.sizes.thumbnail.url) {
+                        image = `<img id="gig-image" src="${event.image.sizes.thumbnail.url}">`;
+                        }
+                        content += `
+                        <div id="gig-div">
+                            <div id="image-container">
+                                ${ticketsLink}
+                                ${image}
+                            </div>
+                            <div id="gig-info">
+                            <p id="event-date">${dateFormat}</p>
+                            <p id="event-title">${event.title}</p>
+                            <p id="event-venue">${venue}</p>
+                            </div>
+                        </div>
+                        `;
+                    }
+                    container.innerHTML = content;
+                }
+            });
     }
-    return response.json();
-  })
-    .then(function(data) {
-
-    const container = document.getElementsByClassName("gig-guide-gigs")[0];
-
-    if (container) {
-      var content = "";
-      for (var i = 0; i < data.events.length; i++) {
-        var event = data.events[i];
-        var dateFormat = convertDate(event.start_date);
-        var venue = "";
-        if (event.venue.city && event.venue.venue) {
-          venue = event.venue.city + ", " + event.venue.venue;
-        } else if (event.venue.city) {
-          venue = event.venue.city;
-        } else if (event.venue.venue) {
-          venue = event.venue.venue;
-        }
-        var ticketsLink = "";
-        if (event.website) {
-          ticketsLink = `<a id="ticket-link" href="${event.website}">Tickets</a>`;
-        } else if (event.url) {
-          ticketsLink = `<a id="ticket-link" href="${event.url}">Tickets</a>`;
-        }
-        var image = "";
-        if (event.image.sizes.thumbnail.url) {
-          image = `<img id="gig-image" src="${event.image.sizes.thumbnail.url}">`;
-        }
-        content += `
-		<div id="gig-div">
-			<div id="image-container">
-				${ticketsLink}
-				${image}
-			</div>
-			<div id="gig-info">
-			  <p id="event-date">${dateFormat}</p>
-			  <p id="event-title">${event.title}</p>
-			  <p id="event-venue">${venue}</p>
-			</div>
-		</div>
-		`;
-      }
-      container.innerHTML = content;
-    }
-  });
-  }
   // End Gig Guide
-    
-    
-    var forwards
-    
+        
     // Handle browser back/forward buttons
     window.addEventListener('popstate', function(e) {
         // You could implement history state management here
@@ -335,4 +332,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add fade transition to main content
     mainContent.style.transition = 'opacity 0.3s ease';
+
+    // Add a service worker to add PWA functionality
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }) // Path relative to the origin
+            .then((registration) => {
+                console.log('Service Worker Registered with scope:', registration.scope);
+            })
+            .catch((error) => {
+                console.error('Service Worker Registration Failed:', error);
+            });
+        });
+    }
+
 });
