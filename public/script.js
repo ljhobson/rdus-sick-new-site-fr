@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const radioStream = document.getElementById('radio-stream');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
-    
+
     // Get all navigation links
     const navLinks = document.getElementsByClassName('nav-link');
     const mobileNavLinks = document.getElementsByClassName('mobile-nav-link');
-    
+
     // Audio player state
     let isPlaying = false;
-    
+
     // Load home page by default
     var pathname = window.location.pathname.slice(1);
     if (pathname) {
@@ -22,32 +22,67 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
 	    loadPage('home');
     }
-    
+
     // Set up play button
     if (playButton && radioStream) {
         playButton.addEventListener('click', togglePlay);
     }
-    
+
     // Set up mobile menu button
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', toggleMobileMenu);
     }
-    
+
     // Set up navigation links
     setupNavigationLinks();
-    
-    
+
+    // lock screen controls and metadata
+    function updateNowPlaying(songTitle, artist) {
+	  if ('mediaSession' in navigator) {
+		navigator.mediaSession.metadata = new MediaMetadata({
+		  title: songTitle,
+		  artist: artist,
+		  album: 'RDU 98.5FM - Live',
+		  artwork: [
+		    { src: '/assets/RDU50_Full Logo_White.png', sizes: '512x512', type: 'image/png' }
+		  ]
+		});
+	  }
+	}
+
+    if ('mediaSession' in navigator) {
+	  // Set up action handlers
+	  navigator.mediaSession.setActionHandler('play', () => {
+		isPlaying = false;
+		togglePlay(); // sets it to true
+	  });
+
+	  navigator.mediaSession.setActionHandler('pause', () => {
+		isPlaying = true;
+		togglePlay(); // sets it to false
+	  });
+	}
+
+
     // Function to toggle audio playback
     function togglePlay() {
         if (isPlaying) {
             radioStream.pause();
             playButton.classList.remove('playing');
             isPlaying = false;
+            document.title = 'RDU 98.5 FM - Student Radio'
+			document.getElementsByClassName("now-playing-song")[0].innerText = 'RDU 98.5 FM';
+			document.getElementsByClassName("now-playing-song")[1].innerText = 'RDU 98.5 FM';
         } else {
             // Load and play the stream
             radioStream.load();
             const playPromise = radioStream.play();
-            
+            playButton.classList.add('loading-spinner');
+
+
+            // test it doesn't work some reason
+            updateNowPlaying("LARILILRILALALRALA", 'RDU 98.5 FM');
+
             if (playPromise !== undefined) {
                 playButton.classList.add('loading-spinner');
                 playPromise
@@ -55,6 +90,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         playButton.classList.add('playing');
                 		playButton.classList.remove('loading-spinner');
                         isPlaying = true;
+                        lastState = null;
+                        checkState();
                     })
                     .catch(error => {
                         console.error('Error playing audio:', error);
@@ -62,19 +99,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     // Function to toggle mobile menu
     function toggleMobileMenu() {
         mobileMenuBtn.classList.toggle('active');
         mobileMenu.classList.toggle('active');
     }
-    
+
     // Function to close mobile menu
     function closeMobileMenu() {
         mobileMenuBtn.classList.remove('active');
         mobileMenu.classList.remove('active');
     }
-    
+
     // Function to set up navigation links
     function setupNavigationLinks() {
         // Desktop navigation links
@@ -85,7 +122,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadPage(route);
             });
         }
-        
+
+        // Logo navigation
+        document.getElementsByClassName("logo-section")[0].addEventListener('click', function(e) {
+            loadPage("home");
+        });
+
         // Mobile navigation links
         for (let i = 0; i < mobileNavLinks.length; i++) {
             mobileNavLinks[i].addEventListener('click', function(e) {
@@ -96,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-    
+
     // Function to find desktop nav link by route
     function findNavLinkByRoute(route) {
         for (let i = 0; i < navLinks.length; i++) {
@@ -106,20 +148,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return null;
     }
-    
+
     // Function to update active link
     function updateActiveLink(activeLink) {
         // Remove active class from all links
         for (let i = 0; i < navLinks.length; i++) {
             navLinks[i].classList.remove('active');
         }
-        
+
         // Add active class to clicked link
         if (activeLink) {
             activeLink.classList.add('active');
         }
     }
-    
+
     // Function to load page content
     function loadPage(route, dontPush) {
         // Show loading state
@@ -129,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Loading...</p>
             </div>
         `;
-        
+
         // Fetch content from server
         fetch('/api/' + route)
             .then(response => {
@@ -141,26 +183,26 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(html => {
                 // Fade out current content
                 mainContent.style.opacity = '0';
-                
+
                 // Wait for fade out, then update content
                 setTimeout(() => {
                     mainContent.innerHTML = html;
                     mainContent.style.opacity = '1';
-                    
+
                     // Scroll to top
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                    
+
                     // Add history
                     if (!dontPush) {
 	                    history.pushState({ page: route }, '', route);
                     }
-                    
+
                     // Reset now playing
                     lastState = null;
-                    
+
 		            // Update desktop nav active state too
 		            updateActiveLink(findNavLinkByRoute(route));
-                    
+
                     // Initialize any page-specific functionality
                     initializePageScripts();
                 }, 200);
@@ -177,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
     }
-    
+
     // Function to initialize page-specific scripts
     function initializePageScripts() {
         // Handle contact form submission if on contact page
@@ -185,41 +227,41 @@ document.addEventListener('DOMContentLoaded', function() {
         if (contactForm) {
             contactForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
+
                 // Get form data
                 const formData = {
                     name: document.getElementById('name').value,
                     email: document.getElementById('email').value,
                     message: document.getElementById('message').value
                 };
-                
+
                 // Show success message
                 alert('Thank you for your message! We\'ll get back to you soon.');
-                
+
                 // Reset form
                 contactForm.reset();
-                
+
                 console.log('Form submitted:', formData);
             });
         }
-        
+
         // Add any other page-specific initialization here
         const gigGuide = document.getElementsByClassName('gig-guide-gigs');
         if (gigGuide.length > 0) {
         	popuateGigs();
         }
-        
+
         let schedule = document.getElementById('schedule-days');
         if (schedule) {
         	for (let i = 0; i < schedule.children.length; i++) {
         		schedule.children[i].children[0].addEventListener("click", function (event) { toggleDay(this) } );
         	}
         }
-        
+
         let expandTOdayButton = document.getElementsByClassName("action-btn")[0].addEventListener("click", expandToday);
     }
-    
-    
+
+
     // Schedule stuff
     // Toggle individual day
     function toggleDay(header) {
@@ -238,10 +280,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function expandToday() {
         const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const today = days[new Date().getDay()];
-        
+
         // Collapse all first
         collapseAll();
-        
+
         // Expand today
         const allCards = document.getElementsByClassName('day-card');
 		let todayCard = null;
@@ -260,12 +302,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-expand today on load
     expandToday();
 
-    
-    
+
+
     // Poll for Now Playing change
     var lastState = null;
 
 	async function checkState() {
+		if (!isPlaying) {
+		    document.title = 'RDU 98.5 FM - Student Radio'
+			document.getElementsByClassName("now-playing-song")[0].innerText = 'RDU 98.5 FM';
+			document.getElementsByClassName("now-playing-song")[1].innerText = 'RDU 98.5 FM';
+		}
 		try {
 			const response = await fetch('https://rdu985fm-gecko.radioca.st/currentsong');
 			const data = await response.text();
@@ -275,6 +322,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				var nowPlaying = document.getElementsByClassName('now-playing-song')[0];
 				if (nowPlaying) {
 					nowPlaying.innerText = data; // update HTML
+					if (isPlaying) {
+                        document.title = data // update Title
+						document.getElementsByClassName("now-playing-song")[0].innerText = data;
+						document.getElementsByClassName("now-playing-song")[1].innerText = data;
+						// Update the lockscreen when the metadata changes
+						updateNowPlaying(data, 'RDU 98.5 FM');
+                    }
 				}
 			}
 		} catch (err) {
@@ -284,9 +338,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Poll every 2 seconds
 	setInterval(checkState, 2000);
-	
-	
-	
+
+
+
 	// Gig Guide stuff COPY AND PASTED STRAIGHT FROM WEBFLOW
   // Helper function to get the ordinal suffix
   function popuateGigs() {
@@ -367,10 +421,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   }
   // End Gig Guide
-    
-    
+
+
     var forwards
-    
+
     // Handle browser back/forward buttons
     window.addEventListener('popstate', function(e) {
         // You could implement history state management here
@@ -378,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(e);
         loadPage(e.state.page, true);
     });
-    
+
     // Add fade transition to main content
     mainContent.style.transition = 'opacity 0.3s ease';
 });

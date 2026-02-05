@@ -618,3 +618,42 @@ img.icon-link {
 	width: 64px;
 	
 }
+
+/* Ad Slot Styles */
+.ad-slot {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 1rem;
+}
+
+.ad-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
+}
+
+.centered-text {
+    text-align: center;
+}
+
+.coming-up-list {
+    margin-top: 1rem;
+}
+
+.coming-up-list p {
+    margin: 0.75rem 0;
+    font-size: 1.1rem;
+    color: var(--light-text);
+}
+
+.social-icons li{
+    display: inline-block;
+    font-size: 2em;
+    margin: 1px;
+}
+
+.social-link{
+    color: white;
+}
