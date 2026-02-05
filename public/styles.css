@@ -1,9 +1,9 @@
 /* CSS Variables - Radio Wave Theme */
 :root {
-    --primary-color: #333333;
+    --primary-color: #543;
     --secondary-color: #853;
     --dark-bg: #eeeecc;
-    --darker-bg: #eecccc;
+    --darker-bg: #eeddaa;
     --light-text: #754;
     --muted-text: #A0A8C0;
     --accent-glow: rgba(255, 51, 102, 0.3);
@@ -593,41 +593,28 @@ body {
 	line-height: 1;   
 }
 
-/* Ad Slot Styles */
-.ad-slot {
-    text-align: center;
-    margin: 2rem 0;
-    padding: 1rem;
+div.icon-link {
+	background-color: #eee;
+	border-radius: 50%;
+	margin: 10px;
+	width: 64px;
+	height: 64px;
+	overflow: hidden;
+	text-align: center;
+	position: relative;
 }
 
-.ad-image {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-    border-radius: 4px;
+div.icon-link > * {
+	width: 32px;
+	height: 32px;
+	
 }
 
-.centered-text {
-    text-align: center;
-}
-
-.coming-up-list {
-    margin-top: 1rem;
-}
-
-.coming-up-list p {
-    margin: 0.75rem 0;
-    font-size: 1.1rem;
-    color: var(--light-text);
-}
-
-.social-icons li{
-    display: inline-block;
-    font-size: 2em;
-    margin: 1px;
-}
-
-.social-link{
-    color: white;
+img.icon-link {
+	background-color: #eee;
+	border-radius: 50%;
+	padding: 2px;
+	margin: 10px;
+	width: 64px;
+	
 }

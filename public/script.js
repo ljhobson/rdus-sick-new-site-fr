@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const mainContent = document.getElementById('main-content');
+    const logoContainer = document.getElementById('logo-container');
     const playButton = document.getElementById('play-button');
     const radioStream = document.getElementById('radio-stream');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -42,7 +43,6 @@ document.addEventListener('DOMContentLoaded', function() {
             radioStream.pause();
             playButton.classList.remove('playing');
             isPlaying = false;
-            document.title = 'RDU 98.5 FM - Student Radio'
         } else {
             // Load and play the stream
             radioStream.load();
@@ -55,9 +55,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         playButton.classList.add('playing');
                 		playButton.classList.remove('loading-spinner');
                         isPlaying = true;
-
-                        nowPlayingElement = document.getElementsByClassName('now-playing-song')[0];
-                        document.title = nowPlayingElement ? nowPlayingElement.innerText : 'RDU 98.5 FM - Student Radio'
                     })
                     .catch(error => {
                         console.error('Error playing audio:', error);
@@ -211,7 +208,59 @@ document.addEventListener('DOMContentLoaded', function() {
         if (gigGuide.length > 0) {
         	popuateGigs();
         }
+        
+        let schedule = document.getElementById('schedule-days');
+        if (schedule) {
+        	for (let i = 0; i < schedule.children.length; i++) {
+        		schedule.children[i].children[0].addEventListener("click", function (event) { toggleDay(this) } );
+        	}
+        }
+        
+        let expandTOdayButton = document.getElementsByClassName("action-btn")[0].addEventListener("click", expandToday);
     }
+    
+    
+    // Schedule stuff
+    // Toggle individual day
+    function toggleDay(header) {
+    	dayCard = header.parentElement;
+        dayCard.classList.toggle('active');
+    }
+
+    // Collapse all days
+    function collapseAll() {
+        document.querySelectorAll('.day-card').forEach(card => {
+            card.classList.remove('active');
+        });
+    }
+
+    // Expand today's schedule
+    function expandToday() {
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const today = days[new Date().getDay()];
+        
+        // Collapse all first
+        collapseAll();
+        
+        // Expand today
+        const allCards = document.getElementsByClassName('day-card');
+		let todayCard = null;
+		for (let i = 0; i < allCards.length; i++) {
+			if (allCards[i].getAttribute('data-day') === today) {
+				todayCard = allCards[i];
+				break;
+			}
+		}
+		if (todayCard) {
+            todayCard.classList.add('active');
+            todayCard.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    }
+
+    // Auto-expand today on load
+    expandToday();
+
+    
     
     // Poll for Now Playing change
     var lastState = null;
@@ -226,9 +275,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				var nowPlaying = document.getElementsByClassName('now-playing-song')[0];
 				if (nowPlaying) {
 					nowPlaying.innerText = data; // update HTML
-                    if (isPlaying) {
-                        document.title = data // update Title 
-                    }
 				}
 			}
 		} catch (err) {

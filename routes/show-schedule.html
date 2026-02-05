@@ -1,76 +1,201 @@
+<style>
+/* Schedule-specific styles */
+.schedule-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.day-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background-color: #eee;
+}
+
+.day-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s ease;
+}
+
+.day-header:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.day-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.day-emoji {
+    font-size: 1.5rem;
+}
+
+.dropdown-icon {
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+    color: var(--muted-text);
+}
+
+.day-card.active .dropdown-icon {
+    transform: rotate(180deg);
+}
+
+.day-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 1.5rem;
+}
+
+.day-card.active .day-content {
+    max-height: fit-content;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.show-item {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--secondary-color);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.show-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-left-color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+.show-time {
+    font-weight: 700;
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.show-title {
+    font-weight: 600;
+    color: var(--light-text);
+    font-size: 1.05rem;
+    margin-bottom: 0.25rem;
+}
+
+.show-description {
+    color: var(--muted-text);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 0.65rem 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--light-text);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .day-header {
+        padding: 1.25rem 1rem;
+    }
+
+    .day-title {
+        font-size: 1.1rem;
+    }
+
+    .day-emoji {
+        font-size: 1.3rem;
+    }
+
+    .day-card.active .day-content {
+        padding: 0 1rem 1rem 1rem;
+    }
+
+    .show-item {
+        padding: 0.85rem;
+    }
+
+    .show-time {
+        font-size: 0.85rem;
+    }
+
+    .show-title {
+        font-size: 1rem;
+    }
+
+    .show-description {
+        font-size: 0.85rem;
+    }
+
+    .quick-actions {
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+</style>
+
 <div class="content-container">
     <div class="hero">
         <h1>Show Schedule</h1>
         <p>Your guide to RDU's weekly programming</p>
     </div>
 
-    <div class="card centered-text">
+    <div class="card">
         <h2>📅 Weekly Schedule</h2>
         <p>All times are in NZST/NZDT. Check back regularly as our schedule updates with new shows and special programming!</p>
     </div>
 
-    <!--TODO: Refactor the below divs such that they follow the Dont Repeat Yourself property.
-            They should be dynamically generated based on a backend collection/ list of shows.-->
-    <div class="card">
-        <h3>Monday</h3>
-        <div style="margin-top: 1rem;">
-            <p><strong>6:00 AM - 9:00 AM:</strong> Morning Brew - Wake up with eclectic tunes and local news</p>
-            <p><strong>12:00 PM - 2:00 PM:</strong> Lunch Break - Midday music to get you through</p>
-            <p><strong>6:00 PM - 8:00 PM:</strong> The Underground - Deep cuts and emerging artists</p>
-            <p><strong>8:00 PM - 10:00 PM:</strong> Electronic Waves - Electronic and experimental sounds</p>
+    <div class="schedule-container">
+        <div class="quick-actions">
+            <button class="action-btn">Today's Schedule</button>
         </div>
-    </div>
 
-    <div class="card">
-        <h3>Tuesday</h3>
-        <div style="margin-top: 1rem;">
-            <p><strong>6:00 AM - 9:00 AM:</strong> Rise & Shine - Your morning soundtrack</p>
-            <p><strong>12:00 PM - 2:00 PM:</strong> Midday Mix - Variety hour with student DJs</p>
-            <p><strong>6:00 PM - 8:00 PM:</strong> Local Legends - Spotlight on Christchurch artists</p>
-            <p><strong>8:00 PM - 10:00 PM:</strong> Jazz & Blues Night - Classic and contemporary jazz</p>
+        <div id="schedule-days">
+            {{SCHEDULE_CONTENT}}
         </div>
-    </div>
 
-    <div class="card">
-        <h3>Wednesday</h3>
-        <div style="margin-top: 1rem;">
-            <p><strong>6:00 AM - 9:00 AM:</strong> Hump Day Vibes - Midweek motivation</p>
-            <p><strong>12:00 PM - 2:00 PM:</strong> World Music Wednesday - Global sounds</p>
-            <p><strong>6:00 PM - 8:00 PM:</strong> The Indie Hour - Independent music showcase</p>
-            <p><strong>8:00 PM - 10:00 PM:</strong> Talk Time - Community discussions and interviews</p>
+        <div class="card" style="margin-top: 2rem;">
+            <h2>Special Programs</h2>
+            <p>Look out for our special programming including live concert broadcasts, festival coverage, and special event shows announced on social media and during regular programming.</p>
         </div>
-    </div>
-
-    <div class="card">
-        <h3>Thursday</h3>
-        <div style="margin-top: 1rem;">
-            <p><strong>6:00 AM - 9:00 AM:</strong> Morning Edition - News, views, and music</p>
-            <p><strong>12:00 PM - 2:00 PM:</strong> Throwback Thursday - Nostalgic hits</p>
-            <p><strong>6:00 PM - 8:00 PM:</strong> Hip-Hop & R&B - Urban beats and rhymes</p>
-            <p><strong>8:00 PM - 10:00 PM:</strong> Metal Mayhem - Heavy music for heavy times</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3>Friday</h3>
-        <div style="margin-top: 1rem;">
-            <p><strong>6:00 AM - 9:00 AM:</strong> TGIF Morning - Friday feeling starts here</p>
-            <p><strong>12:00 PM - 2:00 PM:</strong> Friday Freestyle - Mixed bag of everything</p>
-            <p><strong>6:00 PM - 10:00 PM:</strong> Friday Night Live - Extended evening show with guest DJs</p>
-            <p><strong>10:00 PM - 12:00 AM:</strong> Late Night Dance Party - Club hits and remixes</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3>Weekend</h3>
-        <div style="margin-top: 1rem;">
-            <p><strong>Saturday:</strong> Weekend warriors bring you specialty shows, live sessions, and extended DJ sets</p>
-            <p><strong>Sunday:</strong> Chill Sunday vibes with acoustic sessions, folk music, and community stories</p>
-        </div>
-    </div>
-
-    <div class="card centered-text">
-        <h2>Special Programs</h2>
-        <p>Look out for our special programming including live concert broadcasts, festival coverage, and special event shows announced on social media and during regular programming.</p>
     </div>
 </div>
