@@ -55,6 +55,11 @@ body {
 
 .logo-section {
     height: 100%;
+    transition: transform 1s ease-in-out;
+}
+
+.logo-section:hover {
+    transform: scale(1.2) rotate(360deg);
 }
 
 /* Player Section - Center */
@@ -309,6 +314,18 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
+}
+
+.footer-section {
+    text-align: center;
+    align-items: center;
+    flex-direction: column;
+    display: flex;
+}
+
+.footer-section img {
+    max-height: 150px;
+    height: auto;
 }
 
 .footer-section h3,
@@ -646,6 +663,10 @@ img.icon-link {
     margin: 0.75rem 0;
     font-size: 1.1rem;
     color: var(--light-text);
+}
+
+.social-icons {
+    margin-top: 1rem;
 }
 
 .social-icons li{
