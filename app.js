@@ -191,6 +191,25 @@ app.get('/api/contact', serveRoute('contact.html'));
 app.get('/api/gig-guide', serveRoute('gig-guide.html'));
 app.get('/api/podcasts', serveRoute('podcasts.html'));
 
+// Get all the adds from ad rotation
+app.get('/api/ad-images', (req, res) => {
+    const dirPath = path.join(__dirname, 'ad-rotation'); // Adjust to your folder structure
+    
+    fs.readdir(dirPath, (err, files) => {
+        if (err) {
+            console.error("Could not list the directory.", err);
+            return res.status(500).json({ error: "Unable to scan directory" });
+        }
+
+        // Filter for image files only
+        const images = files.filter(file => 
+            /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
+        );
+
+        res.json(images);
+    });
+});
+
 // Youtube podcasts
 // Configuration
 const YOUTUBE_API_KEY = process.env.YT_API_KEY; 

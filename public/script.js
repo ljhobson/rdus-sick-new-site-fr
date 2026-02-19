@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
             playButton.classList.add('loading-spinner');
 
 
-            // test it doesn't work some reason
-            updateNowPlaying("LARILILRILALALRALA", 'RDU 98.5 FM');
+            // test it doesn't work some reason //UPDATE IT DOES WORK YUSSSS
+            // updateNowPlaying("LARILILRILALALRALA", 'RDU 98.5 FM');
 
             if (playPromise !== undefined) {
                 playButton.classList.add('loading-spinner');
@@ -309,15 +309,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		if (slider) {
 			// 1. Define your images (update these to match your actual filenames in /ad-rotation)
-			const images = [
-				'1.jpg',
-				'asdf-5.jpg',
-			];
 			
+			fetch('/api/ad-images').then((response) => {
+				return response.json();
+			}).then((data) => {
+				images = data; // set them depending on what the backend returned
+				
+				// 3. Initialize and set interval (5000ms = 5 seconds)
+				rotateBackground(); 
+			});
+			
+			let images;
 			let currentIndex = 0;
-			const path = '/ad-rotation/';
-
 			// 2. Function to change the background
+			var path = '/ad-rotation/';
 			function rotateBackground() {
 				// Set the background image
 				slider.style.background = "none";
@@ -331,11 +336,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				// Move to the next index, or loop back to 0
 				currentIndex = (currentIndex + 1) % images.length;
 			}
-
-			// 3. Initialize and set interval (5000ms = 5 seconds)
-			rotateBackground(); 
-			setInterval(rotateBackground, 10000);
+			setInterval(rotateBackground, 20000);
 		}
+		// Yeah weird order for the thing above but idk it definitely works so meh
 		
 		
 		

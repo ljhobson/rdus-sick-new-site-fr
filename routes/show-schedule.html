@@ -16,7 +16,7 @@
 }
 
 .day-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: #999;
 }
 
 .day-header {
@@ -36,7 +36,7 @@
 .day-title {
     font-size: 1.3rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--primary-dark);
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -49,7 +49,7 @@
 .dropdown-icon {
     font-size: 1.5rem;
     transition: transform 0.3s ease;
-    color: var(--muted-text);
+    color: var(--primary-dark);
 }
 
 .day-card.active .dropdown-icon {
@@ -72,33 +72,33 @@
     padding: 1rem;
     margin-bottom: 0.75rem;
     background: rgba(255, 255, 255, 0.03);
-    border-left: 3px solid var(--secondary-color);
+    border-left: 3px solid var(--primary-dark);
     border-radius: 4px;
     transition: all 0.2s ease;
 }
 
 .show-item:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-left-color: var(--primary-color);
+    border-left-color: var(--primary-dark);
     transform: translateX(5px);
 }
 
 .show-time {
     font-weight: 700;
-    color: var(--secondary-color);
+    color: var(--primary-dark);
     font-size: 0.95rem;
     margin-bottom: 0.25rem;
 }
 
 .show-title {
     font-weight: 600;
-    color: var(--light-text);
+    color: var(--primary-dark);
     font-size: 1.05rem;
     margin-bottom: 0.25rem;
 }
 
 .show-description {
-    color: var(--muted-text);
+    color: var(--primary-dark);
     font-size: 0.9rem;
     line-height: 1.4;
 }
@@ -116,7 +116,7 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 6px;
-    color: var(--light-text);
+    color: var(--primary-dark);
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s ease;
@@ -124,12 +124,13 @@
 
 .action-btn:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: var(--primary-dark);
+    color: var(--primary-dark);
 }
 
+
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
     .day-header {
         padding: 1.25rem 1rem;
     }

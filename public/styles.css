@@ -1,20 +1,23 @@
 /* CSS Variables - Radio Wave Theme */
 :root {
-    --primary-color: #543;
-    --secondary-color: #853;
-    --dark-bg: #eeeecc;
-    --darker-bg: #eeddaa;
-    --light-text: #754;
-    --muted-text: #A0A8C0;
+    --primary-color: #eee;
+    --primary-dark: #333;
+    --secondary-color: white;
+    --dark-bg: #eeeeee;
+    --darker-bg: #ddd;
+    --light-text: #eee;
+    --muted-text: #eee;
     --accent-glow: rgba(255, 51, 102, 0.3);
     --success-color: #00FF88;
-    --card-bg: rgba(255, 255, 255, 0.05);
+    --card-bg: #eee;
     --header-height: 100px;
     --header-color: #111111;
 }
 
 /* Global Styles */
 * {
+	overscroll-behavior-y: none; // works
+	touch-action: manipulation; // doesn't seem to work
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -23,7 +26,7 @@
 body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
     background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
-    color: var(--light-text);
+    color: #555;
     min-height: 100vh;
     overflow-x: hidden;
 }
@@ -37,7 +40,7 @@ body {
     height: var(--header-height);
     background: var(--header-color);
     backdrop-filter: blur(10px);
-    border-bottom: 2px solid var(--primary-color);
+    border-bottom: 2px solid var(--primary-dark);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     z-index: 1000;
 }
@@ -121,7 +124,7 @@ body {
 
 .station-name {
     font-size: 0.9rem;
-    font-weight: 600;
+    // font-weight: 600;
     color: var(--light-text);
 }
 
@@ -250,7 +253,7 @@ body {
 }
 
 .mobile-nav-link:hover {
-    border-left-color: var(--primary-color);
+    border-left-color: var(--primary-dark);
     padding-left: 1.5rem;
     color: var(--primary-color);
 }
@@ -288,7 +291,7 @@ body {
     width: 50px;
     height: 50px;
     border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--primary-color);
+    border-top-color: var(--primary-dark);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -302,7 +305,7 @@ body {
 /* Footer */
 .main-footer {
     background: var(--header-color);
-    border-top: 2px solid var(--primary-color);
+    border-top: 2px solid var(--primary-dark);
     padding: 1rem 0 2rem 0;
     margin-top: 0rem;
 }
@@ -349,10 +352,13 @@ body {
 .hero {
     text-align: center;
     padding: 4rem 2rem;
-    background: linear-gradient(135deg, rgba(255, 102, 51, 0.1), rgba(255, 255, 0, 0.1));
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("/background-image.jpg");
+	background-size: 100%;
     border-radius: 8px;
     margin-bottom: 3rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    
 }
 
 .hero h1 {
@@ -383,12 +389,12 @@ body {
 }
 
 .card h2 {
-    color: var(--primary-color);
+    color: var(--primary-dark);
     margin-bottom: 1rem;
 }
 
 .card h3 {
-    color: var(--secondary-color);
+    color: var(--primary-dark);
     margin-bottom: 0.5rem;
 }
 
@@ -456,8 +462,15 @@ body {
     box-shadow: 0 6px 20px var(--accent-glow);
 }
 
+.hide-hero-on-desktop {
+	display: none;
+}
+
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
+	.hide-hero-on-desktop {
+		display: block;
+	}
     .nav-container {
         padding: 0 1rem;
     }
@@ -709,6 +722,6 @@ img.icon-link {
 
 .webslider {
 	width: 100%;
-	min-height: 30vw;
+	aspect-ratio: 2;
 	margin-bottom: 30px;
 }
