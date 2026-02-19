@@ -678,3 +678,37 @@ img.icon-link {
 .social-link{
     color: white;
 }
+
+
+/* This container defines the spacing in your grid */
+.video-container {
+    max-width: 800px; /* Prevents the video from becoming monstrously huge on ultrawide monitors */
+    margin: 0 auto 2rem auto;
+}
+
+/* This wrapper forces the 16:9 ratio */
+.iframe-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 ratio (9 / 16 = 0.5625) */
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px; /* Optional: makes it look cleaner */
+    background: #000;
+}
+
+/* This makes the iframe fill the wrapper perfectly */
+.iframe-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.webslider {
+	width: 100%;
+	min-height: 30vw;
+	margin-bottom: 30px;
+}

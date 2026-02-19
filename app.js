@@ -191,6 +191,50 @@ app.get('/api/contact', serveRoute('contact.html'));
 app.get('/api/gig-guide', serveRoute('gig-guide.html'));
 app.get('/api/podcasts', serveRoute('podcasts.html'));
 
+// Youtube podcasts
+// Configuration
+const YOUTUBE_API_KEY = process.env.YT_API_KEY; 
+const PLAYLIST_ID = 'PL97frgHoEUCI8GD7OxZStvw7gpAO4xgYl';
+
+app.get('/api/latest-videos', async (req, res) => {
+    try {
+        const params = new URLSearchParams({
+            part: 'snippet',
+            maxResults: '10',
+            playlistId: PLAYLIST_ID,
+            key: YOUTUBE_API_KEY
+        });
+
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            return res.status(response.status).json({ error: 'YouTube API error', details: errorData });
+        }
+
+        const data = await response.json();
+
+        if (!data.items) return res.json([]);
+
+        // Filter out anything that isn't 'public'
+        console.log(data.items);
+        const publicVideos = data.items
+			.filter(item => item.snippet.title !== 'Private video') 
+			.slice(0, 10) 
+			.map(item => ({
+				title: item.snippet.title,
+				videoId: item.snippet.resourceId.videoId,
+				thumbnail: item.snippet.thumbnails.high?.url
+			}));
+
+        res.json(publicVideos);
+
+    } catch (error) {
+        console.error('Fetch error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 // Root route serves index.html NOTE this is done automatically in static
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

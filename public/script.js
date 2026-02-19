@@ -257,8 +257,88 @@ document.addEventListener('DOMContentLoaded', function() {
         		schedule.children[i].children[0].addEventListener("click", function (event) { toggleDay(this) } );
         	}
         }
+		if (document.getElementsByClassName("action-btn").length > 0) {
+        	let expandTOdayButton = document.getElementsByClassName("action-btn")[0].addEventListener("click", expandToday);
+        }
+        
+		console.log("Loading youtube videos");
+        
+        // Youtube Podcasts page
+        function loadYouTubeGallery() {
+			const gallery = document.getElementById('video-gallery');
+			if (!gallery) return; // Exit if the gallery element isn't on this page
 
-        let expandTOdayButton = document.getElementsByClassName("action-btn")[0].addEventListener("click", expandToday);
+			console.log("Fetching latest videos...");
+
+			fetch('/api/latest-videos')
+				.then(response => {
+				    if (!response.ok) throw new Error('Network response was not ok');
+				    return response.json();
+				})
+				.then(videos => {
+				    const htmlMarkup = videos.map(video => `
+						<div class="video-container">
+							<h3>${video.title}</h3>
+							<div class="iframe-wrapper">
+								<iframe 
+									src="https://www.youtube.com/embed/${video.videoId}" 
+									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+									allowfullscreen>
+								</iframe>
+							</div>
+						</div>
+					`).join('');
+
+				    gallery.innerHTML = htmlMarkup;
+				})
+				.catch(err => {
+				    console.error('Failed to render videos:', err);
+				    gallery.innerHTML = '<p>Latest videos are currently unavailable.</p>';
+				});
+		}
+		console.log("Loading youtube videos 1");
+		if (document.getElementById('video-gallery')) {
+			console.log("Loading youtube videos");
+			loadYouTubeGallery();
+		}
+		
+		
+		// webslider
+		
+		var slider = document.getElementsByClassName("webslider")[0];
+
+		if (slider) {
+			// 1. Define your images (update these to match your actual filenames in /ad-rotation)
+			const images = [
+				'1.jpg',
+				'asdf-5.jpg',
+			];
+			
+			let currentIndex = 0;
+			const path = '/ad-rotation/';
+
+			// 2. Function to change the background
+			function rotateBackground() {
+				// Set the background image
+				slider.style.background = "none";
+				slider.style.backgroundImage = `url('${path}${images[currentIndex]}')`;
+				
+				// Ensure the background looks good (centered and covering the card)
+				slider.style.backgroundSize = 'cover';
+				slider.style.backgroundPosition = 'center';
+				slider.style.transition = 'background-image 0.5s ease-in-out'; // Smooth fade
+
+				// Move to the next index, or loop back to 0
+				currentIndex = (currentIndex + 1) % images.length;
+			}
+
+			// 3. Initialize and set interval (5000ms = 5 seconds)
+			rotateBackground(); 
+			setInterval(rotateBackground, 10000);
+		}
+		
+		
+		
     }
 
 
