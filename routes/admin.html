@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin</title>
+  <style>
+    body { font-family: sans-serif; max-width: 400px; margin: 80px auto; padding: 0 16px; }
+    h1 { font-size: 1.2rem; margin-bottom: 24px; }
+    label { display: block; margin-bottom: 4px; font-size: .9rem; }
+    input { display: block; width: 100%; padding: 8px; margin-bottom: 16px; font-size: 1rem; box-sizing: border-box; }
+    button { padding: 8px 20px; font-size: 1rem; cursor: pointer; }
+    #error { color: red; margin-top: 12px; font-size: .9rem; }
+	.card {
+		height: 110px;
+  		position: relative;
+		vertical-align: middle;
+		margin: 5px;
+		border-radius: 5px;
+		background-color: #eee;
+	}
+	.card > a {
+		position: absolute;
+		top: 25px;
+	}
+	.card * {
+		margin: 5px;
+	}
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h1>Admin Login</h1>
+  <label for="username">Username</label>
+  <input type="text" id="username" autocomplete="username">
+  <label for="password">Password</label>
+  <input type="password" id="password" autocomplete="current-password">
+  <button id="login-btn">Log in</button>
+  <div id="error"></div>
+</div>
+
+<div id="admin-panel" style="display:none">
+  <div class="content-container">
+    <p>Logged in. <button id="logout-btn">Log out</button></p>
+    <div id="images"></div>
+    
+    <h2>Upload Image</h2>
+    <input type="file" id="file-input">
+    <button id="upload-btn">Upload</button>
+    <p id="upload-status"></p>
+    
+  </div>
+</div>
+
+<script>
+  var TOKEN_KEY = 'admin_token';
+
+function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
+function setToken(t) { sessionStorage.setItem(TOKEN_KEY, t); }
+function clearToken() { sessionStorage.removeItem(TOKEN_KEY); }
+function authHeader() { return { 'Authorization': 'Bearer ' + getToken() }; }
+  
+  var loginScreen = document.getElementById('login-screen');
+  var adminPanel  = document.getElementById('admin-panel');
+  var usernameEl  = document.getElementById('username');
+  var passwordEl  = document.getElementById('password');
+  var loginBtn    = document.getElementById('login-btn');
+  var errorEl     = document.getElementById('error');
+  var logoutBtn   = document.getElementById('logout-btn');
+
+  var fileInput    = document.getElementById('file-input');
+  var uploadBtn    = document.getElementById('upload-btn');
+  var uploadStatus = document.getElementById('upload-status');
+  
+(function () {
+
+
+  function showLogin() {
+    adminPanel.style.display  = 'none';
+    loginScreen.style.display = 'block';
+    usernameEl.value = '';
+    passwordEl.value = '';
+    errorEl.textContent = '';
+  }
+  
+  /* ── upload ── */
+  uploadBtn.addEventListener('click', function () {
+    var file = fileInput.files[0];
+    if (!file) { uploadStatus.textContent = 'Please select a file.'; return; }
+ 
+    uploadStatus.textContent = 'Uploading...';
+    uploadBtn.disabled = true;
+ 
+    fetch('/admin/images', {
+      method: 'POST',
+      headers: Object.assign(authHeader(), { 'x-filename': file.name }),
+      body: file
+    })
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+    .then(function (res) {
+      if (res.ok) {
+        uploadStatus.textContent = 'Uploaded.';
+        fileInput.value = '';
+        loadImages();
+      } else {
+        uploadStatus.textContent = res.data.error || 'Upload failed.';
+      }
+    })
+    .catch(function () { uploadStatus.textContent = 'Network error.'; })
+    .finally(function () { uploadBtn.disabled = false; showAdmin(); });
+  });
+  
+
+  if (getToken()) showAdmin();
+
+  loginBtn.addEventListener('click', function () {
+    errorEl.textContent = '';
+    var u = usernameEl.value.trim();
+    var p = passwordEl.value;
+    if (!u || !p) { errorEl.textContent = 'Please enter username and password.'; return; }
+
+    loginBtn.disabled = true;
+    fetch('/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    })
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+    .then(function (res) {
+      if (res.ok && res.data.token) { setToken(res.data.token); showAdmin(); }
+      else errorEl.textContent = res.data.error || 'Login failed.';
+    })
+    .catch(function () { errorEl.textContent = 'Network error.'; })
+    .finally(function () { loginBtn.disabled = false; });
+  });
+
+  passwordEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') loginBtn.click(); });
+
+  logoutBtn.addEventListener('click', function () {
+    fetch('/admin/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken() } })
+      .finally(function () { clearToken(); showLogin(); });
+      
+  });
+})();
+
+
+  /* ── delete ── */
+  function deleteImage(filename, el) {
+  	console.log("Delete", filename);
+    fetch('/admin/images/' + encodeURIComponent(filename), {
+      method: 'DELETE',
+      headers: authHeader()
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.ok) showAdmin(); // reload the list after deleting
+    });
+  }
+  
+  function showAdmin() {
+    loginScreen.style.display = 'none';
+    adminPanel.style.display  = 'block';
+    var images = document.getElementById("images");
+    
+    fetch('/api/ad-images', {
+      method: 'GET',
+    })
+    .then(function (res) { 
+    	return res.json()
+    }).then(function (data) {
+		console.log(data);
+		images.innerHTML = "";
+    	for (let i = 0; i < data.length; i++) {
+    		images.innerHTML += `<div class="card"><img height=100px src="/ad-rotation/${data[i]}"><a>${data[i]}<button onclick="deleteImage('${data[i]}')">Delete</button></a></div>`;
+    	}
+    });
+    
+    
+  }
+ 
+
+</script>
+</body>
+</html>

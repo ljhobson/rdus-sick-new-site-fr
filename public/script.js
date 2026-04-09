@@ -266,7 +266,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Youtube Podcasts page
         function loadYouTubeGallery() {
 			const gallery = document.getElementById('video-gallery');
+			const gallery2 = document.getElementById('podcast-gallery');
 			if (!gallery) return; // Exit if the gallery element isn't on this page
+			if (!gallery2) return; // Exit if the gallery element isn't on this page
 
 			console.log("Fetching latest videos...");
 
@@ -275,8 +277,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				    if (!response.ok) throw new Error('Network response was not ok');
 				    return response.json();
 				})
-				.then(videos => {
-				    const htmlMarkup = videos.map(video => `
+				.then(galleries => {
+					var videos = galleries.videos;
+				    var htmlMarkup = videos.map(video => `
 						<div class="video-container">
 							<h3>${video.title}</h3>
 							<div class="iframe-wrapper">
@@ -288,8 +291,22 @@ document.addEventListener('DOMContentLoaded', function() {
 							</div>
 						</div>
 					`).join('');
-
 				    gallery.innerHTML = htmlMarkup;
+				    
+					var podcasts = galleries.podcasts;
+				    var htmlMarkup = podcasts.map(video => `
+						<div class="video-container">
+							<h3>${video.title}</h3>
+							<div class="iframe-wrapper">
+								<iframe 
+									src="https://www.youtube.com/embed/${video.videoId}" 
+									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+									allowfullscreen>
+								</iframe>
+							</div>
+						</div>
+					`).join('');
+				    gallery2.innerHTML = htmlMarkup;
 				})
 				.catch(err => {
 				    console.error('Failed to render videos:', err);
@@ -336,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				// Move to the next index, or loop back to 0
 				currentIndex = (currentIndex + 1) % images.length;
 			}
-			setInterval(rotateBackground, 20000);
+			setInterval(rotateBackground, 10000);
 		}
 		// Yeah weird order for the thing above but idk it definitely works so meh
 		

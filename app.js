@@ -2,6 +2,9 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+
 // Read and parse .env file
 function loadEnv() {
   try {
@@ -18,6 +21,7 @@ function loadEnv() {
     });
   } catch (err) {
     // .env file doesn't exist, that's okay
+    console.log(".env is not linked");
   }
 }
 
@@ -31,6 +35,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 
 // Serve ad-rotation directory as static files
+AD_DIR = 'ad-rotation';
 app.use('/ad-rotation', express.static(path.join(__dirname, 'ad-rotation')));
 
 // Route handler function
@@ -190,6 +195,7 @@ app.get('/api/home', serveRoute('home.html'));
 app.get('/api/contact', serveRoute('contact.html'));
 app.get('/api/gig-guide', serveRoute('gig-guide.html'));
 app.get('/api/podcasts', serveRoute('podcasts.html'));
+app.get('/api/terms', serveRoute('terms.html'));
 
 // Get all the adds from ad rotation
 app.get('/api/ad-images', (req, res) => {
@@ -213,7 +219,8 @@ app.get('/api/ad-images', (req, res) => {
 // Youtube podcasts
 // Configuration
 const YOUTUBE_API_KEY = process.env.YT_API_KEY; 
-const PLAYLIST_ID = 'PL97frgHoEUCI8GD7OxZStvw7gpAO4xgYl';
+const PLAYLIST_ID = 'PL97frgHoEUCIYMrKhXxAg-BvCnzii_b3x';
+const PLAYLIST2_ID ='PL97frgHoEUCIBIKAu9fobHbeY4dr7-3KO';
 
 app.get('/api/latest-videos', async (req, res) => {
     try {
@@ -223,17 +230,30 @@ app.get('/api/latest-videos', async (req, res) => {
             playlistId: PLAYLIST_ID,
             key: YOUTUBE_API_KEY
         });
+        
+        const params2 = new URLSearchParams({
+            part: 'snippet',
+            maxResults: '10',
+            playlistId: PLAYLIST2_ID,
+            key: YOUTUBE_API_KEY
+        });
 
         const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`);
+        const response2 = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params2}`);
         
         if (!response.ok) {
             const errorData = await response.json();
             return res.status(response.status).json({ error: 'YouTube API error', details: errorData });
         }
+        if (!response2.ok) {
+            const errorData = await response.json();
+            return res.status(response.status).json({ error: 'YouTube API error', details: errorData });
+        }
 
         const data = await response.json();
+        const data2 = await response2.json();
 
-        if (!data.items) return res.json([]);
+        if (!data.items || !data2.items) return res.json([]);
 
         // Filter out anything that isn't 'public'
         console.log(data.items);
@@ -245,8 +265,16 @@ app.get('/api/latest-videos', async (req, res) => {
 				videoId: item.snippet.resourceId.videoId,
 				thumbnail: item.snippet.thumbnails.high?.url
 			}));
+		const publicVideos2 = data2.items
+			.filter(item => item.snippet.title !== 'Private video') 
+			.slice(0, 10) 
+			.map(item => ({
+				title: item.snippet.title,
+				videoId: item.snippet.resourceId.videoId,
+				thumbnail: item.snippet.thumbnails.high?.url
+			}));
 
-        res.json(publicVideos);
+        res.json({ videos: publicVideos, podcasts: publicVideos2 });
 
     } catch (error) {
         console.error('Fetch error:', error);
@@ -254,7 +282,107 @@ app.get('/api/latest-videos', async (req, res) => {
     }
 });
 
+// ADMIN STUFF
+
+const sessions = new Map();
+
+function requireAuth(req, res, next) {
+  const header = req.headers['authorization'] || '';
+  const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token || !sessions.has(token)) {
+    return res.status(401).json({ error: 'Unauthorised' });
+  }
+  next();
+}
+
+
+// FILE ADMIN STUFF
+
+function safePath(filename) {
+  if (!filename || typeof filename !== 'string') return null;
+  const ext = path.extname(filename).toLowerCase();
+  // if (!['jpg','jpeg','png'].has(ext)) return null;
+  const resolved = path.join(AD_DIR, path.basename(filename));
+  console.log(resolved);
+  return resolved.startsWith(AD_DIR + path.sep) ? resolved : null;
+}
+
+app.post('/admin/images', requireAuth, (req, res) => {
+  var filename = req.headers['x-filename'];
+  filenameSafe = safePath(filename);
+  if (filename === null) {
+    res.status(500).json({ error: 'Could not save file.' });
+  }
+  const dest     = filenameSafe
+  const stream   = fs.createWriteStream(dest);
+  
+  console.log("New image uploading:", dest);
+ 
+  req.pipe(stream);
+ 
+  stream.on('finish', () => res.json({ image: { filename } }));
+  stream.on('error',  () => res.status(500).json({ error: 'Could not save file.' }));
+});
+ 
+app.delete('/admin/images/:filename', requireAuth, (req, res) => {
+  const dest = path.join(AD_DIR, path.basename(req.params.filename));
+  
+  console.log("Delete image called:", dest);
+  
+  fs.unlink(dest, err => {
+    if (err) return res.status(404).json({ error: 'File not found.' });
+    res.json({ ok: true });
+  });
+});
+
+
+
+// LOGIN LOGOUT ADMIN STUFF, SAFE VVV
+
+app.get('/admin-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'routes', 'admin.html'));
+});
+
+app.post('/admin/login', express.json(), async (req, res) => {
+  console.log("Admin login attempt", req.body.username);
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+  	console.log("Login attempt failed.");
+    return res.status(400).json({ error: 'Username and password are required.' });
+  }
+ 
+  let usernameMatch = username === process.env.ADMIN_USERNAME;
+  
+
+  const passwordMatch = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+ 
+  if (!usernameMatch || !passwordMatch) {
+  	console.log("Login attempt failed.", usernameMatch, passwordMatch);
+    return res.status(401).json({ error: 'Invalid credentials.' });
+  }
+  
+  console.log("Login attempt sucessful.");
+ 
+  const token = crypto.randomBytes(32).toString('hex');
+  sessions.set(token, true);
+  res.json({ token });
+});
+
+app.post('/admin/logout', requireAuth, (req, res) => {
+  const token = req.headers['authorization'].slice(7);
+  sessions.delete(token);
+  res.json({ ok: true });
+});
+
+// END ADMIN
+
+
+
 // Root route serves index.html NOTE this is done automatically in static
+app.get('/api/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'routes', 'error.html'));
+});
+
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

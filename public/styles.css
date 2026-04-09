@@ -726,3 +726,14 @@ img.icon-link {
 	aspect-ratio: 2;
 	margin-bottom: 30px;
 }
+
+
+.side-by-side {
+	width: 100%;
+}
+
+.side-by-side > * {
+	width: calc(50% - 4px);
+	display: inline-block;
+	vertical-align: top;
+}
