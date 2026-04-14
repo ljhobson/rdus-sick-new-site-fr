@@ -108,6 +108,7 @@ function parseCSV(csvText) {
 	return rows;
 }
 
+
 function getScheduleData() {
 	console.log("Fetching the schedue sheet");
 	fetch(process.env.SHEET).then( res => res.text() ).then( function (res) {
@@ -340,7 +341,11 @@ app.delete('/admin/images/:filename', requireAuth, (req, res) => {
 // LOGIN LOGOUT ADMIN STUFF, SAFE VVV
 
 app.get('/admin-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'routes', 'admin.html'));
+  if (process.env.SERVER_NAME === "master") {
+  	res.sendFile(path.join(__dirname, 'routes', 'admin.html'));
+  } else {
+  	res.sendFile(path.join(__dirname, 'routes', 'admin-error.html'));
+  }
 });
 
 app.post('/admin/login', express.json(), async (req, res) => {
@@ -377,8 +382,91 @@ app.post('/admin/logout', requireAuth, (req, res) => {
 // END ADMIN
 
 
+// FILE SYNC STUFF
+
+// The slave server calls this function
+// which copies the images from the master server
+async function copyImages() {
+	// ONLY IF this is the slave, then make a copy of the images, OTHERWISE return
+	if (process.env.SERVER_NAME === "master") {
+		return;
+	}
+	
+    const MASTER_URL = process.env.SERVER_URL;
+    const LOCAL_DIR = path.join(__dirname, 'ad-rotation');
+
+    if (!fs.existsSync(LOCAL_DIR)) {
+        fs.mkdirSync(LOCAL_DIR, { recursive: true });
+    }
+
+    try {
+        console.log("made it here2");
+        const healthResponse = await fetch(`${MASTER_URL}/api/status`); 
+        const health = await healthResponse.json();
+        console.log("made it here1.5");
+
+        if (health.status !== "Live" || health.server_name !== "master") return;
+
+        console.log("made it here1");
+        const listResponse = await fetch(`${MASTER_URL}/api/ad-images`);
+        console.log("made it here");
+        const remoteImages = await listResponse.json(); // Array of strings
+
+        // 1. Delete local files that are no longer on the master
+        const localFiles = fs.readdirSync(LOCAL_DIR);
+        for (const localFile of localFiles) {
+            if (!remoteImages.includes(localFile)) {
+                fs.unlinkSync(path.join(LOCAL_DIR, localFile));
+                console.log(`Deleted deprecated file: ${localFile}`);
+            }
+        }
+
+        // 2. Sync / Overwrite current files
+        for (const fileName of remoteImages) {
+            const imageUrl = `${MASTER_URL}/ad-rotation/${fileName}`;
+            const localPath = path.join(LOCAL_DIR, fileName);
+
+            try {
+                const imgRes = await fetch(imageUrl);
+                if (!imgRes.ok) continue;
+
+                const buffer = Buffer.from(await imgRes.arrayBuffer());
+                fs.writeFileSync(localPath, buffer);
+            } catch (err) {
+                console.error(`Error downloading ${fileName}`);
+            }
+        }
+
+    } catch (error) {
+        console.error("Sync failed:", error.message);
+    }
+}
+if (process.env.SERVER_NAME !== "master") { // the slave server
+	copyImages();
+	setInterval(copyImages, 60 * 60 * 1000); // Every 60 minutes
+}
+// END FILE SYNC
+
+
+
 
 // Root route serves index.html NOTE this is done automatically in static
+
+function formatUptime(seconds) {
+  const d = Math.floor(seconds / (3600 * 24));
+  const h = Math.floor((seconds % (3600 * 24)) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+
+  return `${d} days, ${h} hours, ${m} minutes, ${s} seconds`;
+}
+app.get('/api/status', (req, res) => {
+	res.statusCode = 200;
+	res.setHeader('Content-Type', 'application/json');
+	res.end(JSON.stringify({ status: "Live", server_name: process.env.SERVER_NAME, uptime:formatUptime(process.uptime()) }));
+});
+
+
 app.get('/api/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'routes', 'error.html'));
 });
