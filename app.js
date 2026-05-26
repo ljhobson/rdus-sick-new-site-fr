@@ -392,7 +392,7 @@ async function copyImages() {
 		return;
 	}
 	
-    const MASTER_URL = process.env.SERVER_URL;
+    const SERVER_URL = process.env.SERVER_URL;
     const LOCAL_DIR = path.join(__dirname, 'ad-rotation');
 
     if (!fs.existsSync(LOCAL_DIR)) {
@@ -400,16 +400,12 @@ async function copyImages() {
     }
 
     try {
-        console.log("made it here2");
-        const healthResponse = await fetch(`${MASTER_URL}/api/status`); 
+        const healthResponse = await fetch(`${SERVER_URL}/api/status`);
         const health = await healthResponse.json();
-        console.log("made it here1.5");
 
         if (health.status !== "Live" || health.server_name !== "master") return;
 
-        console.log("made it here1");
-        const listResponse = await fetch(`${MASTER_URL}/api/ad-images`);
-        console.log("made it here");
+        const listResponse = await fetch(`${SERVER_URL}/api/ad-images`);
         const remoteImages = await listResponse.json(); // Array of strings
 
         // 1. Delete local files that are no longer on the master
@@ -423,7 +419,7 @@ async function copyImages() {
 
         // 2. Sync / Overwrite current files
         for (const fileName of remoteImages) {
-            const imageUrl = `${MASTER_URL}/ad-rotation/${fileName}`;
+            const imageUrl = `${SERVER_URL}/ad-rotation/${fileName}`;
             const localPath = path.join(LOCAL_DIR, fileName);
 
             try {
