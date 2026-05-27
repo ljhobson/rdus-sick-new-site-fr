@@ -2,6 +2,8 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
+const fsp = fs.promises;
+
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
@@ -37,6 +39,8 @@ app.use(express.static('public'));
 // Serve ad-rotation directory as static files
 AD_DIR = 'ad-rotation';
 app.use('/ad-rotation', express.static(path.join(__dirname, 'ad-rotation')));
+
+var linkFilePath = path.join(__dirname, 'data/links.json');
 
 // Route handler function
 function serveRoute(routePath) {
@@ -200,8 +204,10 @@ app.get('/api/terms', serveRoute('terms.html'));
 
 // Get all the adds from ad rotation
 app.get('/api/ad-images', (req, res) => {
-    const dirPath = path.join(__dirname, 'ad-rotation'); // Adjust to your folder structure
-    
+    const dirPath = path.join(__dirname, 'ad-rotation');
+    const dest = linkFilePath; // Path to your data.json
+
+    // 1. Read the images directory
     fs.readdir(dirPath, (err, files) => {
         if (err) {
             console.error("Could not list the directory.", err);
@@ -213,7 +219,32 @@ app.get('/api/ad-images', (req, res) => {
             /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
         );
 
-        res.json(images);
+        // 2. Read the links JSON file
+        fs.readFile(dest, 'utf8', (err, jsonRaw) => {
+            let linksData = {};
+            
+            if (!err && jsonRaw) {
+                try {
+                    linksData = JSON.parse(jsonRaw);
+                } catch (parseErr) {
+                    console.error("Error parsing links JSON file:", parseErr);
+                }
+            } else if (err && err.code !== 'ENOENT') {
+                // Log errors unless it's just a missing file (which is fine)
+                console.error("Error reading links file:", err);
+            }
+			console.log(linksData);
+            // 3. Map images to objects containing both the filename and its link
+            const responseData = images.map(file => {
+                return {
+                    file: file,
+                    link: linksData[file] || "" // Default to empty string if no link exists
+                };
+            });
+
+            // 4. Return the structured array of objects
+            res.json(responseData);
+        });
     });
 });
 
@@ -323,6 +354,49 @@ app.post('/admin/images', requireAuth, (req, res) => {
  
   stream.on('finish', () => res.json({ image: { filename } }));
   stream.on('error',  () => res.status(500).json({ error: 'Could not save file.' }));
+});
+
+app.post('/admin/images/link', requireAuth, express.json(), async (req, res) => {
+    const { filename, link } = req.body;
+
+    if (!filename || !link) {
+        return res.status(400).json({ error: 'Missing filename or link data.' });
+    }
+
+    // 1. Still run safePath to ensure the file configuration is safe/valid
+    const filenameSafe = safePath(filename); 
+    if (!filenameSafe) {
+        return res.status(400).json({ error: 'Invalid filename path.' });
+    }
+
+    const dest = linkFilePath;
+
+    try {
+        let linksData = {};
+
+        // 2. Read the existing JSON configuration file
+        try {
+            const fileContent = await fsp.readFile(dest, 'utf8');
+            linksData = fileContent ? JSON.parse(fileContent) : {};
+        } catch (err) {
+            if (err.code !== 'ENOENT') throw err;
+            console.log('JSON file does not exist yet. Creating a new one.');
+        }
+
+        // 3. FIX: Use the raw 'filename' string (e.g., 'RDU_50_Web Banner.png') 
+        // instead of the path-appended variant as the object key.
+        linksData[filename] = link;
+
+        // 4. Save the updated layout mapping back to disk
+        const jsonString = JSON.stringify(linksData, null, 2);
+        await fsp.writeFile(dest, jsonString, 'utf8');
+
+        return res.status(200).json({ success: true, message: 'Link updated successfully.' });
+
+    } catch (error) {
+        console.error('Error handling link JSON storage:', error);
+        return res.status(500).json({ error: 'Internal Server Error. Could not save link.' });
+    }
 });
  
 app.delete('/admin/images/:filename', requireAuth, (req, res) => {

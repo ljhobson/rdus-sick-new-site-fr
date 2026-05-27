@@ -11,21 +11,37 @@
     input { display: block; width: 100%; padding: 8px; margin-bottom: 16px; font-size: 1rem; box-sizing: border-box; }
     button { padding: 8px 20px; font-size: 1rem; cursor: pointer; }
     #error { color: red; margin-top: 12px; font-size: .9rem; }
-	.card {
-		height: 110px;
-  		position: relative;
-		vertical-align: middle;
-		margin: 5px;
-		border-radius: 5px;
-		background-color: #eee;
-	}
-	.card > a {
-		position: absolute;
-		top: 25px;
-	}
-	.card * {
-		margin: 5px;
-	}
+    
+    /* Adjusted card heights to accommodate the new input elements */
+    .card {
+      height: 160px;
+      position: relative;
+      vertical-align: middle;
+      margin: 12px 0;
+      border-radius: 5px;
+      background-color: #eee;
+      padding: 8px;
+    }
+    .card img {
+      float: left;
+      margin-right: 12px;
+    }
+    .card .card-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .card input.link-input {
+      margin: 4px 0;
+      padding: 4px;
+      font-size: 0.85rem;
+      width: calc(100% - 120px); /* Leaves space layout-wise */
+      display: inline-block;
+    }
+    .card button {
+      padding: 4px 8px;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
@@ -56,17 +72,17 @@
 <script>
   var TOKEN_KEY = 'admin_token';
 
-function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
-function setToken(t) { sessionStorage.setItem(TOKEN_KEY, t); }
-function clearToken() { sessionStorage.removeItem(TOKEN_KEY); }
-function authHeader() { return { 'Authorization': 'Bearer ' + getToken() }; }
+  function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
+  function setToken(t) { sessionStorage.setItem(TOKEN_KEY, t); }
+  function clearToken() { sessionStorage.removeItem(TOKEN_KEY); }
+  function authHeader() { return { 'Authorization': 'Bearer ' + getToken() }; }
   
   var loginScreen = document.getElementById('login-screen');
   var adminPanel  = document.getElementById('admin-panel');
   var usernameEl  = document.getElementById('username');
   var passwordEl  = document.getElementById('password');
   var loginBtn    = document.getElementById('login-btn');
-  var errorEl     = document.getElementById('error');
+  var errorEl      = document.getElementById('error');
   var logoutBtn   = document.getElementById('logout-btn');
 
   var fileInput    = document.getElementById('file-input');
@@ -74,7 +90,6 @@ function authHeader() { return { 'Authorization': 'Bearer ' + getToken() }; }
   var uploadStatus = document.getElementById('upload-status');
   
 (function () {
-
 
   function showLogin() {
     adminPanel.style.display  = 'none';
@@ -102,13 +117,13 @@ function authHeader() { return { 'Authorization': 'Bearer ' + getToken() }; }
       if (res.ok) {
         uploadStatus.textContent = 'Uploaded.';
         fileInput.value = '';
-        loadImages();
+        showAdmin(); // Call showAdmin directly to refresh view
       } else {
         uploadStatus.textContent = res.data.error || 'Upload failed.';
       }
     })
     .catch(function () { uploadStatus.textContent = 'Network error.'; })
-    .finally(function () { uploadBtn.disabled = false; showAdmin(); });
+    .finally(function () { uploadBtn.disabled = false; });
   });
   
 
@@ -140,21 +155,46 @@ function authHeader() { return { 'Authorization': 'Bearer ' + getToken() }; }
   logoutBtn.addEventListener('click', function () {
     fetch('/admin/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken() } })
       .finally(function () { clearToken(); showLogin(); });
-      
   });
 })();
 
-
   /* ── delete ── */
-  function deleteImage(filename, el) {
-  	console.log("Delete", filename);
+  function deleteImage(filename) {
+    console.log("Delete", filename);
     fetch('/admin/images/' + encodeURIComponent(filename), {
       method: 'DELETE',
       headers: authHeader()
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
-      if (data.ok) showAdmin(); // reload the list after deleting
+      if (data.ok) showAdmin();
+    });
+  }
+
+  /* ── save image link ── */
+  function saveImageLink(filename, inputId) {
+    var linkValue = document.getElementById(inputId).value.trim();
+    
+    console.log("Saving link for", filename, ":", linkValue);
+
+    fetch('/admin/images/link', {
+      method: 'POST',
+      headers: Object.assign(authHeader(), { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        filename: filename,
+        link: linkValue
+      })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.ok || data.success) {
+        alert('Link updated successfully!');
+      } else {
+        alert('Failed to save link: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(function () {
+      alert('Network error trying to save link.');
     });
   }
   
@@ -167,19 +207,34 @@ function authHeader() { return { 'Authorization': 'Bearer ' + getToken() }; }
       method: 'GET',
     })
     .then(function (res) { 
-    	return res.json()
+      return res.json();
     }).then(function (data) {
-		console.log(data);
-		images.innerHTML = "";
-    	for (let i = 0; i < data.length; i++) {
-    		images.innerHTML += `<div class="card"><img height=100px src="/ad-rotation/${data[i]}"><a>${data[i]}<button onclick="deleteImage('${data[i]}')">Delete</button></a></div>`;
-    	}
-    });
-    
-    
-  }
- 
+      console.log(data);
+      images.innerHTML = "";
+      
+      for (let i = 0; i < data.length; i++) {
+        // data[i] is now an object: { file, link }
+        var filename = data[i].file;
+        var currentLink = data[i].link;
+        var inputId = 'link-' + i;
 
+        images.innerHTML += `
+          <div class="card">
+            <img height="100px" src="/ad-rotation/${filename}">
+            <div class="card-controls">
+              <strong>${filename}</strong>
+              <div>
+                <input type="text" class="link-input" id="${inputId}" placeholder="https://example.com" value="${currentLink}">
+                <button onclick="saveImageLink('${filename}', '${inputId}')">Save Link</button>
+              </div>
+              <div>
+                <button onclick="deleteImage('${filename}')" style="background-color: #ffcccc; color: #cc0000; border: 1px solid #cc0000;">Delete</button>
+              </div>
+            </div>
+          </div>`;
+      }
+    });
+  }
 </script>
 </body>
 </html>

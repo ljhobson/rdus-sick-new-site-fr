@@ -320,8 +320,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 		
 		
-		// webslider
-		
+		// webslider OLD
+		/*
 		var slider = document.getElementsByClassName("webslider")[0];
 
 		if (slider) {
@@ -356,6 +356,128 @@ document.addEventListener('DOMContentLoaded', function() {
 			setInterval(rotateBackground, 10000);
 		}
 		// Yeah weird order for the thing above but idk it definitely works so meh
+		*/
+		
+		
+		// WEBSLIDER NEW:
+		
+		var slider = document.getElementsByClassName("webslider")[0];
+
+		if (slider) {
+			let images = [];
+			let currentIndex = 0;
+			let rotationInterval;
+			var path = '/ad-rotation/';
+
+			// Fetch the structural data [{ file, link }] from your updated backend
+			fetch('/api/ad-images')
+				.then((response) => response.json())
+				.then((data) => {
+				    images = data;
+				    if (images.length > 0) {
+				        setupArrows();
+				        updateSlider(); 
+				        startRotation();
+				    }
+				});
+
+			// 1. Function to update background image and current navigation link
+			function updateSlider() {
+				var currentAd = images[currentIndex];
+
+				// Apply background properties
+				slider.style.background = "none";
+				slider.style.backgroundImage = `url('${path}${currentAd.file}')`;
+				slider.style.backgroundSize = 'cover';
+				slider.style.backgroundPosition = 'center';
+				slider.style.transition = 'background-image 0.5s ease-in-out';
+
+				// Update target link action or disable if no link exists
+				if (currentAd.link && currentAd.link.trim() !== "") {
+				    slider.style.cursor = "pointer";
+				    slider.onclick = function() {
+				        window.location.href = currentAd.link;
+				    };
+				} else {
+				    slider.style.cursor = "default";
+				    slider.onclick = null; // Remove click action if empty
+				}
+			}
+
+			// 2. Continuous rotation timing logic
+			function startRotation() {
+				clearInterval(rotationInterval);
+				rotationInterval = setInterval(function() {
+				    currentIndex = (currentIndex + 1) % images.length;
+				    updateSlider();
+				}, 10000);
+			}
+
+			// 3. Inject CSS and structural control arrows dynamically
+			function setupArrows() {
+				// Ensure parent container slider properties play nice with absolute overlays
+				slider.style.position = "relative";
+
+				// Create Left Arrow
+				var leftArrow = document.createElement("div");
+				leftArrow.innerHTML = "&#10094;"; // HTML Entity for < arrow
+				leftArrow.className = "slider-arrow left";
+				
+				// Create Right Arrow
+				var rightArrow = document.createElement("div");
+				rightArrow.innerHTML = "&#10095;"; // HTML Entity for > arrow
+				rightArrow.className = "slider-arrow right";
+
+				// Click Logic for Left Arrow
+				leftArrow.onclick = function(e) {
+				    e.stopPropagation(); // Prevents triggering the slider card link click event
+				    currentIndex = (currentIndex - 1 + images.length) % images.length;
+				    updateSlider();
+				    startRotation(); // Reset timer on manual interaction
+				};
+
+				// Click Logic for Right Arrow
+				rightArrow.onclick = function(e) {
+				    e.stopPropagation(); // Prevents triggering the slider card link click event
+				    currentIndex = (currentIndex + 1) % images.length;
+				    updateSlider();
+				    startRotation(); // Reset timer on manual interaction
+				};
+
+				// Append arrows into your target HTML element container
+				slider.appendChild(leftArrow);
+				slider.appendChild(rightArrow);
+
+				// Inject minimalist structural arrow styling rules
+				var style = document.createElement('style');
+				style.innerHTML = `
+				    .slider-arrow {
+				        position: absolute;
+				        top: 50%;
+				        transform: translateY(-50%);
+				        background-color: rgba(0, 0, 0, 0.4);
+				        color: #ffffff;
+				        padding: 12px 16px;
+				        font-size: 1.5rem;
+				        cursor: pointer;
+				        user-select: none;
+				        transition: background-color 0.2s;
+				        z-index: 10;
+				    }
+				    .slider-arrow:hover {
+				        background-color: rgba(0, 0, 0, 0.7);
+				    }
+				    .slider-arrow.left { left: 0; border-radius: 0 4px 4px 0; }
+				    .slider-arrow.right { right: 0; border-radius: 4px 0 0 4px; }
+				`;
+				document.head.appendChild(style);
+			}
+		}
+		
+		// END WEBSLIDER
+		
+		
+		
 		
 		
 		
