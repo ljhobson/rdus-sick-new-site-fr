@@ -1,0 +1,201 @@
+<style>
+/* Chart-specific accordion/card container styles */
+.schedule-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.day-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background-color: #eee;
+}
+
+.day-card:hover {
+    border-color: #999;
+}
+
+.show-item {
+    padding: 1.2rem 1rem;
+    margin: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 4px solid var(--primary-dark, #333);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.show-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(5px);
+}
+
+.show-time {
+    font-weight: 800;
+    color: var(--primary-dark, #333);
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+.show-title {
+    font-weight: 600;
+    color: #222;
+    font-size: 1.05rem;
+}
+
+/* Base structural layout for the dynamic image slider wrapper */
+.webslider {
+	width: 100%;
+	aspect-ratio: 2;
+	margin-bottom: 30px;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 1000px) {
+    .show-item {
+        padding: 0.85rem;
+        margin: 0.5rem 1rem;
+    }
+
+    .show-time {
+        font-size: 0.95rem;
+    }
+
+    .show-title {
+        font-size: 0.95rem;
+    }
+    
+}
+</style>
+
+<div class="content-container">
+    <div class="hero">
+        <h1>TE AHI TOP 10</h1>
+        <p>Voted for by you each week!</p>
+    </div>
+
+    <div class="card" style="position:relative;">
+        <h2><a href="https://forms.gle/GwqvnTw9tQtyAx656">Vote Here</a></h2>
+        <p style="font-size: 0.85rem; margin-top: 12px; font-weight: bold; opacity: 0.8;">
+            Brought to you by <a style="color:#333; text-decoration: none;" href="https://www.nzonair.govt.nz/">New Zealand On Air</a>.
+        </p>
+        <a href="https://www.nzonair.govt.nz/"><img class="logo-section" style="height:100px; position:absolute; left:300px; top:35px;" src="assets/nz-on-air-black.png"></img></a>
+    </div>
+
+    <div class="webslider"></div>
+
+    <div class="schedule-container">
+        <div class="day-card">
+            <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem;">
+                <h3 style="margin:0; font-size: 1.3rem; color: var(--primary-dark);">This Week's Chart Rankings</h3>
+            </div>
+            <div id="chart-list" style="padding-bottom: 1rem;">
+                {{TOP10_CONTENT}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- Active Web Slider Implementation ---
+var slider = document.getElementsByClassName("webslider")[0];
+
+if (slider) {
+    let images = [];
+    let currentIndex = 0;
+    let rotationInterval;
+    var path = '/ad-rotation/';
+
+    fetch('/api/ad-images')
+        .then((response) => response.json())
+        .then((data) => {
+            images = data;
+            if (images.length > 0) {
+                setupArrows();
+                updateSlider(); 
+                startRotation();
+            }
+        });
+
+    function updateSlider() {
+        var currentAd = images[currentIndex];
+        slider.style.background = "none";
+        slider.style.backgroundImage = `url('${path}${currentAd.file}')`;
+        slider.style.backgroundSize = 'cover';
+        slider.style.backgroundPosition = 'center';
+        slider.style.transition = 'background-image 0.5s ease-in-out';
+
+        if (currentAd.link && currentAd.link.trim() !== "") {
+            slider.style.cursor = "pointer";
+            slider.onclick = function() { window.location.href = currentAd.link; };
+        } else {
+            slider.style.cursor = "default";
+            slider.onclick = null;
+        }
+    }
+
+    function startRotation() {
+        clearInterval(rotationInterval);
+        rotationInterval = setInterval(function() {
+            currentIndex = (currentIndex + 1) % images.length;
+            updateSlider();
+        }, 10000);
+    }
+
+    function setupArrows() {
+        slider.style.position = "relative";
+
+        var leftArrow = document.createElement("div");
+        leftArrow.innerHTML = "&#10094;";
+        leftArrow.className = "slider-arrow left";
+        
+        var rightArrow = document.createElement("div");
+        rightArrow.innerHTML = "&#10095;";
+        rightArrow.className = "slider-arrow right";
+
+        leftArrow.onclick = function(e) {
+            e.stopPropagation();
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            updateSlider();
+            startRotation();
+        };
+
+        rightArrow.onclick = function(e) {
+            e.stopPropagation();
+            currentIndex = (currentIndex + 1) % images.length;
+            updateSlider();
+            startRotation();
+        };
+
+        slider.appendChild(leftArrow);
+        slider.appendChild(rightArrow);
+
+        var style = document.createElement('style');
+        style.innerHTML = `
+            .slider-arrow {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background-color: rgba(0, 0, 0, 0.4);
+                color: #ffffff;
+                padding: 12px 16px;
+                font-size: 1.5rem;
+                cursor: pointer;
+                user-select: none;
+                transition: background-color 0.2s;
+                z-index: 10;
+            }
+            .slider-arrow:hover { background-color: rgba(0, 0, 0, 0.7); }
+            .slider-arrow.left { left: 0; border-radius: 0 4px 4px 0; }
+            .slider-arrow.right { right: 0; border-radius: 4px 0 0 4px; }
+        `;
+        document.head.appendChild(style);
+    }
+}
+</script>

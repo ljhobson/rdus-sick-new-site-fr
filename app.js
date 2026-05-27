@@ -56,6 +56,79 @@ function serveRoute(routePath) {
   };
 }
 
+
+// TOP TEN STUFF
+// Global memory object cache variable
+let top10Data = [];
+// Fetch loop to pull from Google Sheets chart configurations
+function getTop10Data() {
+    try {
+        console.log("Fetching the Te Ahi Top 10 sheet...");
+        
+        // Ensure you configure process.env.TOP10 in your environment setup
+        fetch(process.env.TOP10)
+            .then(res => res.text())
+            .then(function (res) {
+                const csv = parseCSV(res);
+                const completeList = [];
+
+                for (let i = 0; i < csv.length; i++) {
+                    if (!csv[i] || !csv[i][0]) continue;
+                    
+                    const lineText = csv[i][0].trim();
+                    if (lineText === "") continue;
+
+                    completeList.push(lineText);
+                }
+                
+                top10Data = completeList;
+                console.log("Top 10 Fetch complete. Loaded track count:", top10Data.length);
+            })
+            .catch(err => console.error("Network error while pulling Top 10 CSV:", err));
+    } catch (error) {
+        console.error("An error occurred within getTop10Data:", error);
+    }
+}
+
+// Initialise poll sync schedules
+getTop10Data();
+setInterval(getTop10Data, 100000);
+
+// Convert standard template blocks into layout rows
+function generateTop10HTML() {
+    if (top10Data.length === 0) {
+        return `<div class="show-item"><div class="show-title">Chart updates incoming. Check back shortly!</div></div>`;
+    }
+
+    return top10Data.map(track => `
+        <div class="show-item">
+            <div class="show-time">${track}</div>
+        </div>
+    `).join('');
+}
+
+// Top 10 Route Endpoint Handler
+app.get('/api/top-ten', (req, res) => {
+    const filePath = path.join(__dirname, 'routes', 'top-ten.html');
+    
+    fs.readFile(filePath, 'utf8', (err, template) => {
+        if (err) {
+            console.error("Could not load Top 10 page source:", err);
+            return res.status(500).send('Error loading page');
+        }
+        
+        const contentHTML = generateTop10HTML();
+        const finalOutput = template.replace('{{TOP10_CONTENT}}', contentHTML);
+        
+        res.send(finalOutput);
+    });
+});
+
+
+
+
+
+
 // Schedule data structure
 var scheduleData = {};
 var days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
@@ -204,6 +277,7 @@ app.get('/api/home', serveRoute('home.html'));
 app.get('/api/contact', serveRoute('contact.html'));
 app.get('/api/gig-guide', serveRoute('gig-guide.html'));
 app.get('/api/podcasts', serveRoute('podcasts.html'));
+app.get('/api/top-ten', serveRoute('top-ten.html'));
 app.get('/api/terms', serveRoute('terms.html'));
 
 // Get all the adds from ad rotation

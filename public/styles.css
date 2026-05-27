@@ -178,9 +178,13 @@ body {
 [data-route="podcasts"].nav-link.active  {
     color: #ae5;
 }
+[data-route="top-ten"].nav-link:hover,
+[data-route="top-ten"].nav-link.active  {
+    color: #4ea;
+}
 [data-route="contact"].nav-link:hover,
 [data-route="contact"].nav-link.active  {
-    color: #4ea;
+    color: #4ae;
 }
 
 .nav-link:hover::after,
