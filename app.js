@@ -114,27 +114,31 @@ function parseCSV(csvText) {
 
 
 function getScheduleData() {
-	console.log("Fetching the schedue sheet");
-	fetch(process.env.SHEET).then( res => res.text() ).then( function (res) {
-		var csv = parseCSV(res);
-		// go through and create the scheduleData object with all the days
-		for (let i = 0; i < days.length; i++) {
-			var showsList = [];
-			lineIndex = 2; // skip the note and days rows (0 and 1)
-			while (lineIndex < csv.length) {
-				var show = csv[lineIndex].slice(0 + 3 * i, 3 + 3 * i);
-				if (show[0] || show[1] || show[2]) {
-					showsList.push({time: show[0], title: show[1], description: show[2]});
+	try {
+		console.log("Fetching the schedue sheet");
+		fetch(process.env.SHEET).then( res => res.text() ).then( function (res) {
+			var csv = parseCSV(res);
+			// go through and create the scheduleData object with all the days
+			for (let i = 0; i < days.length; i++) {
+				var showsList = [];
+				lineIndex = 2; // skip the note and days rows (0 and 1)
+				while (lineIndex < csv.length) {
+					var show = csv[lineIndex].slice(0 + 3 * i, 3 + 3 * i);
+					if (show[0] || show[1] || show[2]) {
+						showsList.push({time: show[0], title: show[1], description: show[2]});
+					}
+					lineIndex++;
 				}
-				lineIndex++;
+				scheduleData[days[i]] = {
+					emoji: "",
+					shows: JSON.parse(JSON.stringify(showsList))
+				}
 			}
-			scheduleData[days[i]] = {
-				emoji: "",
-				shows: JSON.parse(JSON.stringify(showsList))
-			}
-		}
-		console.log("Fetch complete");
-	});
+			console.log("Fetch complete");
+		});
+	} catch (error) {
+		console.error("An error occurred within getScheduleData:", error);
+	}
 }
 getScheduleData();
 
