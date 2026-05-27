@@ -537,15 +537,16 @@ app.post('/admin/logout', requireAuth, (req, res) => {
 // FILE SYNC STUFF
 
 // The slave server calls this function
-// which copies the images from the master server
+// which copies the images and link mapping from the master server
 async function copyImages() {
-	// ONLY IF this is the slave, then make a copy of the images, OTHERWISE return
-	if (process.env.SERVER_NAME === "master") {
-		return;
-	}
-	
+    // ONLY IF this is the slave, then make a copy of the images, OTHERWISE return
+    if (process.env.SERVER_NAME === "master") {
+        return;
+    }
+    
     const SERVER_URL = process.env.SERVER_URL;
     const LOCAL_DIR = path.join(__dirname, 'ad-rotation');
+    const LOCAL_JSON = linkFilePath; // Path to your data.json file on the slave
 
     if (!fs.existsSync(LOCAL_DIR)) {
         fs.mkdirSync(LOCAL_DIR, { recursive: true });
@@ -557,20 +558,35 @@ async function copyImages() {
 
         if (health.status !== "Live" || health.server_name !== "master") return;
 
+        // Fetch the new structural array: [{ file: "...", link: "..." }]
         const listResponse = await fetch(`${SERVER_URL}/api/ad-images`);
-        const remoteImages = await listResponse.json(); // Array of strings
+        const remoteData = await listResponse.json(); 
+
+        // Extract a clean array of filenames for file system comparisons
+        const remoteFilenames = remoteData.map(item => item.file);
+        
+        // Accumulator to reconstruct the links JSON object locally
+        const localLinksObject = {};
 
         // 1. Delete local files that are no longer on the master
         const localFiles = fs.readdirSync(LOCAL_DIR);
         for (const localFile of localFiles) {
-            if (!remoteImages.includes(localFile)) {
+            if (!remoteFilenames.includes(localFile)) {
                 fs.unlinkSync(path.join(LOCAL_DIR, localFile));
                 console.log(`Deleted deprecated file: ${localFile}`);
             }
         }
 
-        // 2. Sync / Overwrite current files
-        for (const fileName of remoteImages) {
+        // 2. Sync / Overwrite current files and populate local link state
+        for (const item of remoteData) {
+            const fileName = item.file;
+            const linkValue = item.link;
+
+            // Map filename to its link if it has one
+            if (linkValue) {
+                localLinksObject[fileName] = linkValue;
+            }
+
             const imageUrl = `${SERVER_URL}/ad-rotation/${fileName}`;
             const localPath = path.join(LOCAL_DIR, fileName);
 
@@ -581,17 +597,27 @@ async function copyImages() {
                 const buffer = Buffer.from(await imgRes.arrayBuffer());
                 fs.writeFileSync(localPath, buffer);
             } catch (err) {
-                console.error(`Error downloading ${fileName}`);
+                console.error(`Error downloading ${fileName}:`, err.message);
             }
+        }
+
+        // 3. Write out the replicated links tracking JSON file locally
+        try {
+            const jsonString = JSON.stringify(localLinksObject, null, 2);
+            fs.writeFileSync(LOCAL_JSON, jsonString, 'utf8');
+            console.log('Link redundancy mapping synced successfully.');
+        } catch (jsonErr) {
+            console.error('Failed to write localized link configuration file:', jsonErr);
         }
 
     } catch (error) {
         console.error("Sync failed:", error.message);
     }
 }
+
 if (process.env.SERVER_NAME !== "master") { // the slave server
-	copyImages();
-	setInterval(copyImages, 60 * 60 * 1000); // Every 60 minutes
+    copyImages();
+    setInterval(copyImages, 60 * 60 * 1000); // Every 60 minutes
 }
 // END FILE SYNC
 
