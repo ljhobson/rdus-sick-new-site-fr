@@ -396,7 +396,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (currentAd.link && currentAd.link.trim() !== "") {
 				    slider.style.cursor = "pointer";
 				    slider.onclick = function() {
-				        window.location.href = currentAd.link;
+				    	window.open(currentAd.link, '_blank');
+				        //window.location.href = currentAd.link;
 				    };
 				} else {
 				    slider.style.cursor = "default";

@@ -81,11 +81,15 @@
     </div>
 
     <div class="card" style="position:relative;">
-        <h2><a href="https://forms.gle/GwqvnTw9tQtyAx656">Vote Here</a></h2>
-        <p style="font-size: 0.85rem; margin-top: 12px; font-weight: bold; opacity: 0.8;">
-            Brought to you by <a style="color:#333; text-decoration: none;" href="https://www.nzonair.govt.nz/">New Zealand On Air</a>.
-        </p>
-        <a href="https://www.nzonair.govt.nz/"><img class="logo-section" style="height:100px; position:absolute; left:300px; top:35px;" src="assets/nz-on-air-black.png"></img></a>
+    	<div style="display:inline-block;">
+		    <h2><a href="https://forms.gle/GwqvnTw9tQtyAx656">Vote Here</a></h2>
+		    <p style="font-size: 0.85rem; margin-top: 12px; font-weight: bold; opacity: 0.8;">
+		        Brought to you by <a style="color:#333; text-decoration: none;" href="https://www.nzonair.govt.nz/">New Zealand On Air</a>.
+		    </p>
+		</div>
+    	<div style="display:inline-block;">
+	        <a href="https://www.nzonair.govt.nz/"><img class="logo-section" style="height:100px;" src="assets/nz-on-air-black.png"></img></a>
+    	</div>
     </div>
 
     <div class="webslider"></div>
@@ -133,7 +137,9 @@ if (slider) {
 
         if (currentAd.link && currentAd.link.trim() !== "") {
             slider.style.cursor = "pointer";
-            slider.onclick = function() { window.location.href = currentAd.link; };
+            slider.onclick = function() {
+		    	window.open(currentAd.link, '_blank');
+	    	};
         } else {
             slider.style.cursor = "default";
             slider.onclick = null;
