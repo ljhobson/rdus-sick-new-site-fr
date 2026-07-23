@@ -622,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ticketsLink = `<a id="ticket-link" href="${event.url}">Tickets</a>`;
         }
         var image = "";
-        if (event.image.sizes.thumbnail.url) {
+        if (event.image && event.image.sizes && event.image.sizes.thumbnail && event.image.sizes.thumbnail.url) {
           image = `<img id="gig-image" src="${event.image.sizes.thumbnail.url}">`;
         }
         content += `
